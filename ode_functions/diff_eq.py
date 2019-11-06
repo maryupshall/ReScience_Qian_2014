@@ -39,7 +39,7 @@ def ode_3d(state, t, parameters, synapse=None, scale=1, exp=np.exp):
     :param t: Current time
     :param parameters: Parameters
     :param synapse: Optional synapse function
-    :param scale: Scaling factor for dhs todo: justify
+    :param scale: Scaling factor for dhs. Used to explore convergence rate in paper
     :param exp: Which exponential function to use, defaults to numpy.exp
     :return: The r.h.s of the ODE
     """

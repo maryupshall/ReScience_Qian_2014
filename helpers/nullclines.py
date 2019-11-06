@@ -49,6 +49,12 @@ def __nullcline_v_implicit__(h, v, parameters, hs=1):
     :return: Implicit nullcline
     """
 
-    p = parameters
-    i_app, g_na, g_k, g_l, e_na, e_k, e_l, _ = p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7:]
+    i_app = parameters['i_app']
+    g_na = parameters['g_na']
+    g_k = parameters['g_k']
+    g_l = parameters['g_l']
+    e_na = parameters['e_na']
+    e_k = parameters['e_k']
+    e_l = parameters['e_l']
+
     return i_app - g_l * (v - e_l) - g_k * (f(h) ** 3) * (v - e_k) - g_na * h * hs * (m_inf(v) ** 3) * (v - e_na)

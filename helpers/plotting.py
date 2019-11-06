@@ -14,8 +14,8 @@ def save_fig(name, extension='pdf', figure_path='figures', figure_prefix='figure
     plt.close('all')
 
 
-def make_legend(legend):
-    plt.legend(legend, fontsize=8)
+def make_legend(legend, **kwargs):
+    plt.legend(legend, fontsize=8, **kwargs)
 
 
 def set_properties(title, x_label="", y_label="", x_tick=None, y_tick=None, x_limits=None, y_limits=None,

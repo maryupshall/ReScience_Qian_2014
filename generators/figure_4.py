@@ -10,6 +10,11 @@ from ode_functions.gating import *
 
 
 def run():
+    """
+    Top level runner for figure 4
+    :return: None
+    """
+
     init_figure(size=(6, 7))
     plt.subplot2grid((4, 2), (0, 0), colspan=1, rowspan=1)
     __figure4a__("A1", ix=0)
@@ -30,9 +35,19 @@ def run():
 
 
 def __figure4a__(title, ix=0):
+    """
+    Nullcline analysis of different shifts to nullclines
+
+    :param title: Plot title (panel label)
+    :param ix: Which plot to make, right shift (ix=0) or left shift (ix=1)
+    :return: None
+    """
+
     i_app_list_set = [[0, 3.5], [0.16, 0.16, 0.16]]
     hs_list_set = [[1, 1], [0.6, 0.2, 0.05]]
     v = np.arange(-90, 50)
+
+    stability = [[False, True], [False, False, True]]
 
     nh = nullcline_h(v)
 
@@ -42,25 +57,35 @@ def __figure4a__(title, ix=0):
     plt.plot(v, nh, 'g')
     for iy, (I, hs) in enumerate(zip(i_app_list, hs_list)):
         nv = nullcline_v(v, I, hs=hs)
+        cross_index = np.argmin(np.abs(nv - nh))  # where they are closest i.e. min(err)
+        style = 'k' if stability[ix][iy] else 'none'
+        plt.scatter(v[cross_index], nv[cross_index], edgecolors='k', zorder=1e6, facecolor=style)
         plt.plot(v, nv, 'r')
 
     if ix == 0:
         set_properties(title, x_label="v (mV)", y_label="h", x_tick=[-40, 0], y_tick=[0, 0.05, 0.1, 0.15],
-                       x_limits=(-40, 5),
-                       y_limits=(0, 0.15))
+                       x_limits=(-40, 5), y_limits=(0, 0.15))
     else:
         set_properties(title, x_label="v (mV)", x_tick=[-60, 20], y_tick=[0, 0.2, 0.4], x_limits=(-80, 20),
-                       y_limits=(0, 0.4), y_ticklabel=[])
+                       y_limits=(0, 0.4))
 
 
 def __figure4b__(title, ix=0):
+    """
+    Bifurcation analysis for 2D and 3D model
+
+    :param title: Plot title (panel label)
+    :param ix: Which plot to make, 2D (ix=0) or 3d (ix=1)
+    :return: None
+    """
+
     if ix == 0:
         __figure4b1_continuation__()
         x_label = ""
         x_tick = [-6, 0, 6]
     else:
         __figure4b2_continuation__()
-        x_label = "$I_{app}$"
+        x_label = "$I_{app}($\mu$A/cm$^2$)$"
         x_tick = [-0.1, 0, 0.2, 0.1]
 
     set_properties(title, y_label='$V_m$ (mV)', y_tick=[-80, 0, 30], x_label=x_label, x_tick=x_tick,
@@ -68,9 +93,15 @@ def __figure4b__(title, ix=0):
 
 
 def __figure4b1_continuation__():
+    """
+    Actual continuation analysis for 4B1. Contains commands to pyDSTool. Performs some formatting and continuation
+
+    :return: None
+    """
+
     parameters = default_parameters(i_app=0)
     v, h, i_app = symbols('v h i_app')
-    parameters[0] = i_app
+    parameters['i_app'] = i_app
     dydt = ode_2d([v, h], 0, parameters, exp=exp)
 
     DSargs_1 = PyDSTool.args(name='bifn_1')
@@ -112,15 +143,21 @@ def __figure4b1_continuation__():
     PyCont_1['LC1_1'].display(('i_app', 'v_min'), stability=True, figure=1)
     PyCont_1['LC1_1'].display(('i_app', 'v_max'), stability=True, figure=1)
 
-    PyCont_1.plot.toggleLabels(visible='off', bytype=['P', 'RG'])
-    PyCont_1.plot.togglePoints(visible='off', bytype=['P', 'RG'])
+    PyCont_1.plot.toggleLabels(visible='off', bytype=['P', 'RG', 'LP'])
+    PyCont_1.plot.togglePoints(visible='off', bytype=['P', 'RG', 'LP'])
     plt.gca().set_title('')
 
 
 def __figure4b2_continuation__():
+    """
+    Actual continuation analysis for 4B2. Contains commands to pyDSTool. Performs some formatting and continuation
+
+    :return: None
+    """
+
     parameters = default_parameters(i_app=-0.1)
     v, h, h_s, i_app = symbols('v h h_s i_app')
-    parameters[0] = i_app
+    parameters['i_app'] = i_app
     dydt = ode_3d([v, h, h_s], 0, parameters, exp=exp)
 
     DSargs_2 = PyDSTool.args(name='bifn_2')
@@ -164,38 +201,45 @@ def __figure4b2_continuation__():
 
     PyCont_2.plot.toggleLabels(visible='off', bytype=['P', 'RG'])
     PyCont_2.plot.togglePoints(visible='off', bytype=['P', 'RG'])
+
+    PyCont_2.plot.toggleLabels(visible='off', byname=['LPC2', 'LPC3'])
+    PyCont_2.plot.togglePoints(visible='off', byname=['LPC2', 'LPC3'])
+
     plt.gca().set_title('')
 
 
 def __figure4c__(title, ix=0):
+    """
+    IV curves for 2D and 3D model
+
+    :param title: Plot title (panel label)
+    :param ix: Which plot to make, 2D (ix=0) or 3d (ix=1)
+    :return: None
+    """
+
     ode_functions = [ode_2d, ode_3d]
     v_list = np.arange(-100, 20, 0.5)
     t = np.arange(0, 1000, 0.1)
 
     membrane_current = np.zeros(len(v_list))
     parameters = default_parameters()
-    parameters.append(None)
-
-    ode_function = ode_functions[ix]
-    parameters[-1] = ode_function
 
     for i in range(len(v_list)):
         initial_state = [v_list[i], 0] + ix * [0]
 
-        state = odeint(voltage_clamp, initial_state, t, args=(parameters,))
+        state = odeint(voltage_clamp, initial_state, t, args=(parameters, ode_functions[ix]))  # run voltage clamp
         h = state[:, 1]
         v = state[:, 0]
-        hs = 1 if np.shape(state)[1] == 2 else state[:, 2]
+        hs = 1 if np.shape(state)[1] == 2 else state[:, 2]  # if 2d then hs=1 otherwise hs is taken from simulation
 
-        membrane_current[i] = -total_current(v, h, parameters, hs=hs)[-1]
+        membrane_current[i] = -total_current(v, h, parameters, hs=hs)[-1]  # take last time point as steady state
 
     plt.plot(v_list, membrane_current, 'k')
     plt.plot(v_list, v_list * [0], '--', color='grey')
 
     if ix == 0:
-        set_properties(title, x_label="Voltage (mV)", y_label="I$_{stim} ( \mu A/cm^{2}$)", x_tick=[-80, -40],
-                       y_tick=[-5, 0, 5],
-                       x_limits=(-100, -20), y_limits=(-5, 5))
+        set_properties(title, x_label="Voltage (mV)", y_label="I$_{stim}($\mu$A/cm^{2}$)", x_tick=[-80, -40],
+                       y_tick=[-5, 0, 5], x_limits=(-100, -20), y_limits=(-5, 5))
     else:
-        set_properties(title, x_label="Voltage (mV)", x_tick=[-70, -60, -50],
-                       y_tick=[-0.1, 0, 0.1, 0.2], x_limits=(-70, -50), y_limits=(-0.1, 0.2), y_ticklabel=[])
+        set_properties(title, x_label="Voltage (mV)", x_tick=[-70, -60, -50], y_tick=[-0.1, 0, 0.1, 0.2],
+                       x_limits=(-70, -50), y_limits=(-0.1, 0.2))

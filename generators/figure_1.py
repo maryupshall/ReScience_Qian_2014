@@ -12,7 +12,7 @@ def run():
     :return: None
     """
 
-    init_figure(size=(6, 3))
+    init_figure(size=(7, 3))
     plt.subplot2grid((2, 6), (0, 0), colspan=2, rowspan=1)
     __figure1a__('A')
 
@@ -61,8 +61,10 @@ def __figure1a__(title):
         color = 'black' if ix == 0 else 'grey'
         linestyle = '--' if ix == 0 else 'solid'
         plt.plot(voltage, current, color=color, linestyle=linestyle, zorder=-ix)
+    make_legend(["2D", "3D"], loc='center left', bbox_to_anchor=(0.3, 1.05))
 
-    set_properties(title, x_label="V (mV)", y_label="peak I$_{Na}$", x_tick=[-80, -40, 0, 40], y_tick=[-160, 0])
+    set_properties(title, x_label="V (mV)", y_label="peak I$_{Na}$($\mu$A/cm$^2$)", x_tick=[-80, -40, 0, 40],
+                   y_tick=[-160, 0])
 
 
 def __figure1b__(title):
@@ -97,7 +99,7 @@ def __figure1b__(title):
     packet = list(zip(start_times, end_times))
     packet.insert(0, (-100, 0))
 
-    parameters = default_parameters(g_na=7.5)  # need to divide given value by 2 to get correct graph
+    parameters = default_parameters(g_na=9.12 / 1.3)  # need to divide given value get correct graph
     # todo backwards, number does not match and units correct here not paper
 
     ic = [-70, 0, 0]
@@ -135,11 +137,14 @@ def __figure1c__(title):
     h = state[int(len(t) / 2):, 1]  # throw out first half to remove transient
     n = state[int(len(t) / 2):, 4]
 
+    replicate_fit = np.poly1d(np.polyfit(h, n, 3))
+    print(replicate_fit)
+
     plt.plot(h, n, c="grey")
     plt.plot(h, list(map(f, h)), "k")
     set_properties(title, x_label="h", y_label="n", x_tick=[0, 0.2, 0.4, 0.6], y_tick=np.arange(0, 1, 0.2),
                    x_limits=[0, 0.7])
-    make_legend(["n", "n=f(h)"])
+    make_legend(["n", "n=f(h)"], loc='center left', bbox_to_anchor=(0.3, 1.05))
 
 
 def __figure1d__(title, ix=0):
@@ -157,9 +162,12 @@ def __figure1d__(title, ix=0):
 
     ode_function = ode_functions[ix]
 
-    ic = [-55, 0, 0] + ix * [0, 0] # if ix is 1 this appends an additions (0,0) to the inital conditions
+    ic = [-55, 0, 0] + ix * [0, 0]  # if ix is 1 this appends an additions (0,0) to the inital conditions
     state = odeint(ode_function, ic, t, args=(parameters,), atol=1e-3)
 
+    state = state[13000:, :]
+    t = t[13000:]
+    t -= t[0]  # set initial time to 0
     plt.plot(t, state[:, 0], "k")
     y_label = 'v (mV)'
     y_tick_label = None
@@ -169,4 +177,4 @@ def __figure1d__(title, ix=0):
         y_tick_label = []
 
     set_properties(title, x_label="time (ms)", y_label=y_label, y_tick=[-80, -40, 0], y_limits=[-80, 20],
-                   y_ticklabel=y_tick_label)
+                   y_ticklabel=y_tick_label, x_tick=[0, 1000, 2000, 3000], x_limits=[0, 3000])

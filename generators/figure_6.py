@@ -7,6 +7,11 @@ from ode_functions.gating import *
 
 
 def run():
+    """
+    Top level runner for figure 6
+    :return: None
+    """
+
     init_figure(size=(6, 6))
     __figure6__()
 
@@ -14,37 +19,42 @@ def run():
 
 
 def __figure6__():
-    e_syn = 0
-    conditions = [nmda_current, ampa_current, None]
-    parameter_sets1 = [[0, 0.060, 0], [0, 0.0023, 0], [0, 0.16, 0]]
-    parameter_sets2 = [[0, 0.060, 0], [0, 0.0007, 0], [0, 0.32, 0]]
-    all_parameters = [parameter_sets1, parameter_sets2]
-    times = [2000, 8000, 10000]
+    e_syn = 0  # todo: is this correct?
+    stimulus_types = {'nmda': nmda_current, 'ampa': ampa_current, 'i': None}
+    parameter_sets_a = {'nmda': [0, 0.060, 0], 'ampa': [0, 0.0023, 0], 'i': [0, 0.16, 0]}  # a parameters
+    parameter_sets_b = {'nmda': [0, 0.060, 0], 'ampa': [0, 0.0007, 0], 'i': [0, 0.32, 0]}  # b parameters
+    all_parameter_sets = [parameter_sets_a, parameter_sets_b]
+    times = [2000, 8000, 10000]  # onset, offset, end times
 
-    for iz, parameter_sets in enumerate(all_parameters):
-        for ix, (condition, parameter_set) in enumerate(zip(conditions, parameter_sets)):
+    for iz, parameter_sets in enumerate(all_parameter_sets):  # iterate over fig a/b parameter sets
+        for ix, perturbation_type in enumerate(['nmda', 'ampa', 'i']): # iterate over type of channel nmda, ampa, inj.
+
+            parameter_set = parameter_sets[perturbation_type]
+            stimulus_type = stimulus_types[perturbation_type]
+
             t0 = 0
             ic = [-65, 1, 1]
             t_solved = np.array([])
             solution = np.array([0, 0, 0])
 
             plt.subplot(3, 2, 2 * ix + iz + 1)
-            for iy, control_parameter in enumerate(parameter_set):
+            # if there is a synapse defined: control parameter is g_syn, otherwise it's i_app
+            for iy, parameter_value in enumerate(parameter_set): # iterate over the value of the channel for pulse
+
                 t = np.arange(t0, times[iy])
                 t_solved = np.concatenate((t_solved, t))
                 t0 = times[iy]
 
-                if condition is not None:
+                if stimulus_type is not None: # there is a channel
                     parameters = default_parameters(i_app=0)
-                    parameters.append(control_parameter)
-                    parameters.append(e_syn)
-                    parameters.append(condition)
+                    parameters['g_syn'] = parameter_value
+                    parameters['e_syn'] = e_syn
                 else:
-                    parameters = default_parameters(i_app=control_parameter)
-                    parameters.append(condition)
+                    parameters = default_parameters(i_app=parameter_value)
 
-                state = odeint(synaptic_3d, ic, t, args=(parameters,))
-                ic = state[-1, :]
+                state = odeint(synaptic_3d, ic, t, args=(parameters, stimulus_type))
+
+                ic = state[-1, :] # maintain the initial condition of the next time step
 
                 solution = np.vstack((solution, state))
 
@@ -52,6 +62,7 @@ def __figure6__():
 
             plt.plot(t_solved, solution[:, 0], 'k')
 
+            # plot setting generation - not germaine to simulations
             title = "A"
             y_label = "V (mV)"
             y_ticklabel = None
