@@ -14,7 +14,14 @@ def ode_2d(state, t, parameters, exp=np.exp):
     :return: The r.h.s of the ODE
     """
 
-    i_app, g_na, g_k, g_l, e_na, e_k, e_l = parameters
+    i_app = parameters['i_app']
+    g_na = parameters['g_na']
+    g_k = parameters['g_k']
+    g_l = parameters['g_l']
+    e_na = parameters['e_na']
+    e_k = parameters['e_k']
+    e_l = parameters['e_l']
+
     v, h = state
     n = f(h)
 
@@ -37,12 +44,23 @@ def ode_3d(state, t, parameters, synapse=None, scale=1, exp=np.exp):
     :return: The r.h.s of the ODE
     """
 
-    p = parameters
-    i_app, g_na, g_k, g_l, e_na, e_k, e_l, p_synapse = p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7:]
+    i_app = parameters['i_app']
+    g_na = parameters['g_na']
+    g_k = parameters['g_k']
+    g_l = parameters['g_l']
+    e_na = parameters['e_na']
+    e_k = parameters['e_k']
+    e_l = parameters['e_l']
+
     v, h, hs = state
     n = f(h)
 
-    i_syn = 0 if synapse is None else synapse(v, p_synapse)
+    i_syn = 0
+    if synapse is not None:
+        g_syn = parameters['g_syn']
+        e_syn = parameters['e_syn']
+
+        i_syn = synapse(v, g_syn, e_syn)
 
     dv = i_app - (g_l * (v - e_l)) - (g_na * (m_inf(v, exp=exp) ** 3) * h * hs * (v - e_na)) - (
             g_k * (n ** 3) * (v - e_k)) - i_syn
@@ -52,10 +70,8 @@ def ode_3d(state, t, parameters, synapse=None, scale=1, exp=np.exp):
     return [dv, dh, dhs]
 
 
-def synaptic_3d(state, t, parameters):
-    p, func = parameters[:-1], parameters[-1]
-
-    return ode_3d(state, t, p, synapse=func)
+def synaptic_3d(state, t, parameters, func):
+    return ode_3d(state, t, parameters, synapse=func)
 
 
 def ode_5d(state, t, parameters):
@@ -68,7 +84,14 @@ def ode_5d(state, t, parameters):
     :return: The r.h.s of the ODE
     """
 
-    i_app, g_na, g_k, g_l, e_na, e_k, e_l = parameters  # todo: dict
+    i_app = parameters['i_app']
+    g_na = parameters['g_na']
+    g_k = parameters['g_k']
+    g_l = parameters['g_l']
+    e_na = parameters['e_na']
+    e_k = parameters['e_k']
+    e_l = parameters['e_l']
+
     v, h, hs, m, n = state
 
     dv = i_app - g_l * (v - e_l) - g_na * (m ** 3) * h * hs * (v - e_na) - g_k * (n ** 3) * (v - e_k)  # 3D model
@@ -80,7 +103,7 @@ def ode_5d(state, t, parameters):
     return [dv, dh, dhs, dm, dn]
 
 
-def voltage_clamp(state, t, parameters):
+def voltage_clamp(state, t, parameters, func):
     """
     Perform voltage clamp on any ode
 
@@ -89,11 +112,12 @@ def voltage_clamp(state, t, parameters):
     :param state: State of the ODE (r.h.s of the ODE vector)
     :param t: Current time
     :param parameters: Parameters
+    :param func: ODE function to clamp
     :return: The ODE with voltage clamped
     """
 
-    p, func = parameters[:-1], parameters[-1]  # todo: smart way to handle function included with parameters
-    return __clamp__(state, t, p, func, 0)
+    # todo: smart way to handle function included with parameters
+    return __clamp__(state, t, parameters, func, 0)
 
 
 def hs_clamp(state, t, parameters):
@@ -129,7 +153,7 @@ def __clamp__(state, t, p, func, ix, exp=np.exp):
 
 def default_parameters(i_app=0, g_na=8):
     """
-    Generate a structure for the default parameters
+    Generate a dictionary for the default parameters
 
     :param i_app: Applied current - defaults to 0 if not specified
     :param g_na: Default sodium conductance - defaults to 8 if not specified
@@ -142,4 +166,12 @@ def default_parameters(i_app=0, g_na=8):
     e_l = -60  # mV
     g_l = 0.013  # mS/cm^2
 
-    return [i_app, g_na, g_k, g_l, e_na, e_k, e_l]  # todo: currently list, should be dict with -> list function
+    params = {'g_k': g_k,
+              'e_k': e_k,
+              'e_na': e_na,
+              'g_na': g_na,
+              'e_l': e_l,
+              'g_l': g_l,
+              'i_app': i_app}
+
+    return params

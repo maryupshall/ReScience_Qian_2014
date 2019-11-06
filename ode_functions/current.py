@@ -15,8 +15,8 @@ def sodium_current(v, m, parameters, h=1, hs=1):
     :return: Sodium current
     """
 
-    g_na = parameters[1]
-    e_na = parameters[4]
+    g_na = parameters['g_na']
+    e_na = parameters['e_na']
     return g_na * (v - e_na) * (m ** 3) * h * hs
 
 
@@ -31,33 +31,37 @@ def total_current(v, h, parameters, hs=1):
     :return: Sodium current
     """
 
-    p = parameters
-    i_app, g_na, g_k, g_l, e_na, e_k, e_l, _ = p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7:]
+    g_na = parameters['g_na']
+    g_k = parameters['g_k']
+    g_l = parameters['g_l']
+    e_na = parameters['e_na']
+    e_k = parameters['e_k']
+    e_l = parameters['e_l']
 
     return - (g_l * (v - e_l)) - (g_na * (m_inf(v) ** 3) * h * hs * (v - e_na)) - (
             g_k * (f(h[-1]) ** 3) * (v - e_k))  # todo: integrate with sodium_current()
 
 
-def nmda_current(v, p, mg=1.4):
+def nmda_current(v, g_syn, e_syn, mg=1.4):
     """
     Current from an nmda synapse
     :param v: Membrane potential
-    :param p: Parameters
+    :param g_syn: Synaptic conductance
+    :param e_syn: Reversal potential of synapse
     :param mg: Model mg parameter: todo: check paper for what this is
     :return: nmda current
     """
 
-    g_syn, e_syn = p
     return (g_syn * (v - e_syn)) / (1 + (mg / 3.57) * np.exp(0.062 * v))
 
 
-def ampa_current(v, p):
+def ampa_current(v, g_syn, e_syn):
     """
     Current from an ampa synapse
     :param v: Membrane potential
-    :param p: Parameters
+    :param g_syn: Synaptic conductance
+    :param e_syn: Reversal potential of synapse
     :return: ampa current
     """
 
-    g_syn, e_syn = p
     return g_syn * (v - e_syn)
