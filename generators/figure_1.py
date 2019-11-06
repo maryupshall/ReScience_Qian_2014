@@ -108,7 +108,8 @@ def __figure1c__(title):
 
     plt.plot(h, n, c="grey")
     plt.plot(h, list(map(f, h)), "k")
-    set_properties(title, x_label="h", y_label="n", x_tick=[0, 0.2, 0.4, 0.6], y_tick=np.arange(0, 1, 0.2), x_limits=[0, 0.7])
+    set_properties(title, x_label="h", y_label="n", x_tick=[0, 0.2, 0.4, 0.6], y_tick=np.arange(0, 1, 0.2),
+                   x_limits=[0, 0.7])
     make_legend(["n", "n=f(h)"])
 
 
