@@ -1,11 +1,9 @@
 import PyDSTool
-from scipy.integrate import odeint
 from sympy import *
 
-from helpers.nullclines import nullcline_h, nullcline_v
+from helpers.nullclines import nullcline_figure
 from helpers.plotting import *
-from ode_functions.current import total_current
-from ode_functions.diff_eq import ode_2d, ode_3d, voltage_clamp, default_parameters
+from ode_functions.diff_eq import ode_2d, ode_3d, default_parameters, current_voltage_curve
 from ode_functions.gating import *
 
 
@@ -14,6 +12,8 @@ def run():
     Top level runner for figure 4
     :return: None
     """
+
+    print("Running: Figure 4")
 
     init_figure(size=(6, 7))
     plt.subplot2grid((4, 2), (0, 0), colspan=1, rowspan=1)
@@ -43,24 +43,16 @@ def __figure4a__(title, ix=0):
     :return: None
     """
 
-    i_app_list_set = [[0, 3.5], [0.16, 0.16, 0.16]]
-    hs_list_set = [[1, 1], [0.6, 0.2, 0.05]]
     v = np.arange(-90, 50)
+    i_app_list = [[0, 3.5], [0.16, 0.16, 0.16]][ix]
+    hs_list = [[1, 1], [0.6, 0.2, 0.05]][ix]
 
     stability = [[False, True], [False, False, True]]
 
-    nh = nullcline_h(v)
-
-    i_app_list = i_app_list_set[ix]
-    hs_list = hs_list_set[ix]
-
-    plt.plot(v, nh, 'g')
-    for iy, (I, hs) in enumerate(zip(i_app_list, hs_list)):
-        nv = nullcline_v(v, I, hs=hs)
-        cross_index = np.argmin(np.abs(nv - nh))  # where they are closest i.e. min(err)
-        style = 'k' if stability[ix][iy] else 'none'
-        plt.scatter(v[cross_index], nv[cross_index], edgecolors='k', zorder=1e6, facecolor=style)
-        plt.plot(v, nv, 'r')
+    for iy, (i_app, hs) in enumerate(zip(i_app_list, hs_list)):
+        plot_h_nullcline = iy == 0  # only plot for first iteration
+        nullcline_figure(v, i_app, hs=hs, plot_h_nullcline=plot_h_nullcline == 0,
+                         stability=stability[ix][iy], h_color='g', v_color='r')
 
     if ix == 0:
         set_properties(title, x_label="v (mV)", y_label="h", x_tick=[-40, 0], y_tick=[0, 0.05, 0.1, 0.15],
@@ -85,7 +77,7 @@ def __figure4b__(title, ix=0):
         x_tick = [-6, 0, 6]
     else:
         __figure4b2_continuation__()
-        x_label = "$I_{app}($\mu$A/cm$^2$)$"
+        x_label = "I$_{app}$($\mu$A/cm$^2$)"
         x_tick = [-0.1, 0, 0.2, 0.1]
 
     set_properties(title, y_label='$V_m$ (mV)', y_tick=[-80, 0, 30], x_label=x_label, x_tick=x_tick,
@@ -217,28 +209,25 @@ def __figure4c__(title, ix=0):
     :return: None
     """
 
-    ode_functions = [ode_2d, ode_3d]
-    v_list = np.arange(-100, 20, 0.5)
-    t = np.arange(0, 1000, 0.1)
+    func = [ode_2d, ode_3d][ix]
+    voltage = np.arange(-100, 20, 0.5)
+    time = np.arange(0, 3000, 0.1)
 
-    membrane_current = np.zeros(len(v_list))
-    parameters = default_parameters()
+    ic = [-100, 1]
+    if ix == 0:  # 2d system
+        use_system_hs = False
+    else:
+        ic += [1]
+        use_system_hs = True
 
-    for i in range(len(v_list)):
-        initial_state = [v_list[i], 0] + ix * [0]
+    current = current_voltage_curve(func, voltage, time, ic, use_system_hs=use_system_hs, current_function="Balance",
+                                    follow=True)
 
-        state = odeint(voltage_clamp, initial_state, t, args=(parameters, ode_functions[ix]))  # run voltage clamp
-        h = state[:, 1]
-        v = state[:, 0]
-        hs = 1 if np.shape(state)[1] == 2 else state[:, 2]  # if 2d then hs=1 otherwise hs is taken from simulation
-
-        membrane_current[i] = -total_current(v, h, parameters, hs=hs)[-1]  # take last time point as steady state
-
-    plt.plot(v_list, membrane_current, 'k')
-    plt.plot(v_list, v_list * [0], '--', color='grey')
+    plt.plot(voltage, current, 'k')
+    plt.plot(voltage, np.zeros(np.shape(voltage)), '--', color='grey')
 
     if ix == 0:
-        set_properties(title, x_label="Voltage (mV)", y_label="I$_{stim}($\mu$A/cm^{2}$)", x_tick=[-80, -40],
+        set_properties(title, x_label="Voltage (mV)", y_label="I$_{stim}$($\mu$A/cm$^2$)", x_tick=[-80, -40],
                        y_tick=[-5, 0, 5], x_limits=(-100, -20), y_limits=(-5, 5))
     else:
         set_properties(title, x_label="Voltage (mV)", x_tick=[-70, -60, -50], y_tick=[-0.1, 0, 0.1, 0.2],

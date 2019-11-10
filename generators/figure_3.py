@@ -3,9 +3,9 @@ from scipy.integrate import odeint
 from scipy.signal import argrelmax
 from sympy import *
 
-from helpers.nullclines import nullcline_v, nullcline_h
+from helpers.nullclines import nullcline_figure
 from helpers.plotting import *
-from ode_functions.diff_eq import ode_3d, default_parameters, hs_clamp
+from ode_functions.diff_eq import ode_3d, default_parameters, hs_clamp, pulse
 from ode_functions.gating import *
 
 
@@ -14,6 +14,8 @@ def run():
     Top level runner for figure 3
     :return: None
     """
+
+    print("Running: Figure 3")
 
     init_figure(size=(6, 8))
     plt.subplot2grid((5, 4), (0, 0), colspan=4, rowspan=1)
@@ -44,37 +46,15 @@ def __figure3a__(title, fig_num=0):
     :return: None
     """
 
+    pattern = {0: 0, 2000: 0.16}  # set i_app=0 at t=0. Change to i_app=0,16 at t=2000
+    end_time = 6000
     ic = [-55, 0, 0]
-    t_solved = np.array([])
-    solution = np.array([0, 0, 0])  # needs dummy data to keep shape for vstack
-    currents = [0, 0.16]
-    t0 = 0
-    times = [2000, 6000]
+    solution, t_solved, stimulus = pulse(ode_3d, 'i_app', pattern, end_time, ic)
 
-    t = None
-    state = None
-
-    for ix, i_app in enumerate(currents):  # multiple applied currents and stitch together
-        t = np.arange(t0, times[ix], 0.1)
-        t_solved = np.concatenate((t_solved, t))
-        t0 = times[ix]
-
-        parameters = default_parameters(i_app=i_app)
-        state = odeint(ode_3d, ic, t, args=(parameters,))
-        ic = state[-1, :]  # maintain consistent initial condition
-
-        solution = np.vstack((solution, state))
+    spike_time, instantaneous_frequency = __compute_instantaneous_frequency__(solution[:, 0], t_solved)
 
     # we want the spikes from the second half. Since the for loop runs only twice the last state
     # and t variables correspond to that
-    spike_index = argrelmax(state[:, 0])[0]
-    spike_index = spike_index[state[spike_index, 0] > -40]
-    instantaneous_frequency = 1000 / np.diff(t[spike_index])
-
-    solution = solution[1:, :]  # first row is [0,0] dummy data so omit
-
-    stimulus = np.zeros(t_solved.shape)
-    stimulus[t_solved > times[0]] = 1
 
     if fig_num == 0:  # plot voltage data
         original_axis = plt.gca()
@@ -82,7 +62,7 @@ def __figure3a__(title, fig_num=0):
         plt.plot(t_solved, 10 * stimulus - 80, 'grey')
 
         ax2 = original_axis.twinx()  # second axis to plot the "inset frequency"
-        ax2.plot(t[spike_index[1:]], instantaneous_frequency, 'ko', markersize=1)
+        ax2.plot(spike_time, instantaneous_frequency, 'ko', markersize=1)
         ax2.set_ylim([1, 10])  # gives nice scaling
         ax2.set_yticks([7, 9])
         ax2.set_ylabel('Frequency (Hz)')
@@ -99,6 +79,24 @@ def __figure3a__(title, fig_num=0):
                        x_tick=[0, 3000, 6000], x_limits=[0, 6000])
 
 
+def __compute_instantaneous_frequency__(voltage, time, threshold=-40):
+    """
+    Get per-spike frequency from peak times
+
+    :param voltage: Voltage trace time series
+    :param time: Time of voltage points
+    :param threshold: Set threshold s.t. peaks below threshold are excluded
+    :return: Spike times and frequency
+    """
+
+    spike_index = argrelmax(voltage)[0]  # returns ([peaks]) so extract array
+    spike_index = spike_index[voltage[spike_index] > threshold]  # filter out spikelets if any?
+    instantaneous_frequency = 1 / np.diff(time[spike_index])
+
+    spike_times = time[spike_index[1:]]  # drop first spike time since its used to compute diff
+    return spike_times, 1000 * instantaneous_frequency  # convert frequency to Hz
+
+
 def __figure3b__(title, ix=0):
     """
     Nullcline analysis of different regimes in depolarization block
@@ -108,21 +106,11 @@ def __figure3b__(title, ix=0):
     :return: None
     """
 
-    i_app_list = [0, 0.16, 0.16, 0.16]
-    hs_list = [0.6, 0.6, 0.2, 0.05]
-
     v = np.arange(-90, 50)
-    nh = nullcline_h(v)
+    i_app = [0, 0.16, 0.16, 0.16][ix]  # different panels (ix) use a different i_app: set the appropriate one
+    hs = [0.6, 0.6, 0.2, 0.05][ix]  # different panels (ix) use a different hs: set the appropriate one
 
-    I = i_app_list[ix]
-    hs = hs_list[ix]
-    plt.plot(v, nh, 'k')
-    nv = nullcline_v(v, I, hs=hs)
-
-    plt.plot(v, nv, '--', color='grey')
-    style = 'k' if ix == 3 else 'none'
-    cross_index = np.argmin(np.abs(nv - nh))
-    plt.scatter(v[cross_index], nv[cross_index], edgecolors='k', facecolors=style)
+    nullcline_figure(v, i_app, hs=hs, plot_h_nullcline=True, stability=ix == 3)
 
     y_label = ""
     y_ticklabel = []
@@ -141,13 +129,13 @@ def __figure3c__(title):
     :return: None
     """
 
-    __figure3c_continuation__()
+    __figure3c_continuation__()  # also makes the plot
     parameters = default_parameters(i_app=0.16)
     t = np.arange(0, 10000, 0.1)
     ic = [-60, 0, 1]
 
     trajectory = odeint(ode_3d, ic, t, args=(parameters,))  # solve system and overlay - zorder ensures in background
-    plt.plot(trajectory[:, 2], trajectory[:, 0], c='grey', zorder=-1e5, linewidth=0.5)
+    plt.plot(trajectory[:, 2], trajectory[:, 0], c='grey', zorder=-1e5, linewidth=0.5)  # draw trajectory below bifn
 
     set_properties(title, y_label="v (mV)", x_limits=[0, 1], x_tick=[0, 0.5, 1], y_tick=[-80, -40, 0, 40], x_label='hs')
 
@@ -203,7 +191,7 @@ def __figure3c_continuation__():
     PyCont_3.plot.toggleLabels(visible='off', bytype=['P', 'RG', 'LPC'])  # remove unused labels
     PyCont_3.plot.togglePoints(visible='off', bytype=['P', 'RG', 'LPC'])  # remove unused points
 
-    # hopefully remove rightmost hopf point - this may not always be H1?
+    # hopefully remove rightmost hopf point - this may not always be H1? todo
     PyCont_3.plot.toggleLabels(visible='off', byname='H1')
 
     plt.gca().set_title('')
@@ -217,28 +205,12 @@ def __figure3d__(title):
     :return: None
     """
 
+    pattern = {0: 0, 2000: 0.16}  # set i_app=0 at t=0. Change to i_app=0.16 at t=2000
+    end_time = 10000
     ic = [-65, 1, 1]
-    t_solved = np.array([])
-    solution = np.array([0, 0, 0])
-    currents = [0, 0.16]
-    times = [2000, 10000]
-    t0 = 0
 
-    for ix, I_app in enumerate(currents):
-        t = np.arange(t0, times[ix], 0.1)
-        t_solved = np.concatenate((t_solved, t))
-        t0 = times[ix]
-
-        parameters = default_parameters(i_app=I_app)
-        state = odeint(lambda s, _, p: ode_3d(s, _, p, scale=2), ic, t, args=(parameters,))
-        ic = state[-1, :]  # maintain initial condition
-
-        solution = np.vstack((solution, state))
-
-    solution = solution[1:, :]  # TODO: hack for starting shape
-
-    stimulus = np.zeros(t_solved.shape)
-    stimulus[t_solved > times[0]] = 1
+    # need lambda function to set additional scale flag
+    solution, t_solved, stimulus = pulse(lambda s, t, p: ode_3d(s, t, p, scale=2), 'i_app', pattern, end_time, ic)
 
     plt.plot(t_solved, solution[:, 0], 'k')
     plt.plot(t_solved, 10 * stimulus - 80, 'grey')

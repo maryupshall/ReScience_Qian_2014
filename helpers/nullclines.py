@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import newton
 
@@ -38,6 +39,20 @@ def nullcline_v(v, i_app, hs=1):
     return nullcline
 
 
+def intersect(fa, fb):
+    """
+    Compute intersection between 2 curves lazily (where the two functions are closest).
+
+    This is a helper function for plotting intersections of nullclines. This is not a true intersection
+
+    :param fa: Numeric values for function a
+    :param fb: Numberc values for function b
+    :return: Intersection index
+    """
+
+    return np.argmin(np.abs(fa - fb))
+
+
 def __nullcline_v_implicit__(h, v, parameters, hs=1):
     """
     Implicit form of the v nullcline evaluated at h, v, and hs
@@ -58,3 +73,16 @@ def __nullcline_v_implicit__(h, v, parameters, hs=1):
     e_l = parameters['e_l']
 
     return i_app - g_l * (v - e_l) - g_k * (f(h) ** 3) * (v - e_k) - g_na * h * hs * (m_inf(v) ** 3) * (v - e_na)
+
+
+def nullcline_figure(v, i_app, hs=1, plot_h_nullcline=False, stability=True, h_color='black', v_color='grey'):
+    nh = nullcline_h(v)
+    if plot_h_nullcline:
+        plt.plot(v, nh, h_color, zorder=-1000)
+
+    nv = nullcline_v(v, i_app, hs=hs)
+    plt.plot(v, nv, v_color)
+
+    cross_index = intersect(nh, nv)  # where they are closest i.e. min(err)
+    style = 'k' if stability else 'none'
+    plt.scatter(v[cross_index], nv[cross_index], edgecolors='k', facecolor=style, zorder=1000)

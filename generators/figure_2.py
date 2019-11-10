@@ -1,8 +1,6 @@
-from scipy.integrate import odeint
-
-from helpers.nullclines import nullcline_h, nullcline_v
+from helpers.nullclines import nullcline_figure
 from helpers.plotting import *
-from ode_functions.diff_eq import ode_2d, default_parameters
+from ode_functions.diff_eq import ode_2d, pulse
 from ode_functions.gating import *
 
 
@@ -11,6 +9,8 @@ def run():
     Top level runner for figure 2
     :return: None
     """
+
+    print("Running: Figure 2")
 
     init_figure(size=(5, 3))
     plt.subplot2grid((2, 2), (0, 0), colspan=2, rowspan=1)
@@ -31,28 +31,10 @@ def __figure2a__(title):
     :return: None
     """
 
+    pattern = {0: 0, 2000: 3.5}  # set i_app=0 at t=0. Change to i_app=3.5 at t=2000
+    end_time = 3000
     ic = [-35, 1]
-    t_solved = np.array([])
-    solution = np.array([0, 0])  # needs dummy data to keep shape for vstack
-    currents = [0, 3.5]
-    times = [2000, 3000]
-    t0 = 0
-
-    for ix, i_app in enumerate(currents):  # run simulation for multiple i_app and stitch together
-        t = np.arange(t0, times[ix], 0.1)
-        t0 = times[ix]
-        t_solved = np.concatenate((t_solved, t))
-
-        parameters = default_parameters(i_app=i_app)
-        state = odeint(ode_2d, ic, t, args=(parameters,))
-        ic = state[-1, :]  # maintain the initial condition for when this re-initializes
-
-        solution = np.vstack((solution, state))  # keep track of solution
-
-    solution = solution[1:, :]  # first row is [0,0] dummy data so omit
-
-    stimulus = np.zeros(t_solved.shape)
-    stimulus[t_solved > times[0]] = currents[1]
+    solution, t_solved, stimulus = pulse(ode_2d, 'i_app', pattern, end_time, ic)
 
     plt.plot(t_solved, solution[:, 0], "k")
     plt.plot(t_solved, stimulus - 70, "grey")
@@ -68,20 +50,10 @@ def __figure2b__(title, ix=0):
     :return: None
     """
 
-    i_app_list = [0, 3.5]
-    v = np.arange(-90, 50)
-    nh = nullcline_h(v)
+    v = np.arange(-90, 50, 1)  # compute nullcline every 1mV between -90,V and 50mV
+    i_app = [0, 3.5][ix]  # different panels use a different i_app: set the appropriate one
 
-    i_app = i_app_list[ix]
-
-    plt.plot(v, nh, 'k')
-    nv = nullcline_v(v, i_app)
-
-    plt.plot(v, nv, '--', color='grey')
-    style = 'k' if ix == 1 else 'none'
-
-    cross_index = np.argmin(np.abs(nv - nh))  # where they are closest i.e. min(err)
-    plt.scatter(v[cross_index], nv[cross_index], edgecolors='k', facecolors=style)
+    nullcline_figure(v, i_app, hs=1, plot_h_nullcline=True, stability=ix == 1)
 
     y_label = "h"
     y_ticklabel = None

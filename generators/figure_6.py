@@ -1,8 +1,6 @@
-from scipy.integrate import odeint
-
 from helpers.plotting import *
 from ode_functions.current import nmda_current, ampa_current
-from ode_functions.diff_eq import synaptic_3d, default_parameters
+from ode_functions.diff_eq import synaptic_3d, pulse
 from ode_functions.gating import *
 
 
@@ -12,6 +10,8 @@ def run():
     :return: None
     """
 
+    print("Running: Figure 6")
+
     init_figure(size=(6, 6))
     __figure6__()
 
@@ -19,46 +19,34 @@ def run():
 
 
 def __figure6__():
-    e_syn = 0  # todo: is this correct?
-    stimulus_types = {'nmda': nmda_current, 'ampa': ampa_current, 'i': None}
-    parameter_sets_a = {'nmda': [0, 0.060, 0], 'ampa': [0, 0.0023, 0], 'i': [0, 0.16, 0]}  # a parameters
-    parameter_sets_b = {'nmda': [0, 0.060, 0], 'ampa': [0, 0.0007, 0], 'i': [0, 0.32, 0]}  # b parameters
-    all_parameter_sets = [parameter_sets_a, parameter_sets_b]
-    times = [2000, 8000, 10000]  # onset, offset, end times
+    channel_types = {'nmda': nmda_current, 'ampa': ampa_current, 'i_app': None}
 
-    for iz, parameter_sets in enumerate(all_parameter_sets):  # iterate over fig a/b parameter sets
-        for ix, perturbation_type in enumerate(['nmda', 'ampa', 'i']): # iterate over type of channel nmda, ampa, inj.
+    # parameters for each channel. There are two sets of parameters for the 2 regimes
+    all_a_parameters = {'nmda': [0, 0.060, 0], 'ampa': [0, 0.0023, 0], 'i_app': [0, 0.16, 0]}  # a parameters
+    all_b_parameters = {'nmda': [0, 0.060, 0], 'ampa': [0, 0.0007, 0], 'i_app': [0, 0.32, 0]}  # b parameters
 
-            parameter_set = parameter_sets[perturbation_type]
-            stimulus_type = stimulus_types[perturbation_type]
-
-            t0 = 0
-            ic = [-65, 1, 1]
-            t_solved = np.array([])
-            solution = np.array([0, 0, 0])
-
+    for iz, parameter_sets in enumerate([all_a_parameters, all_b_parameters]):  # iterate over fig a/b parameter sets
+        for ix, channel_type in enumerate(['nmda', 'ampa', 'i_app']):  # iterate over type of channel nmda, ampa, inj.
             plt.subplot(3, 2, 2 * ix + iz + 1)
-            # if there is a synapse defined: control parameter is g_syn, otherwise it's i_app
-            for iy, parameter_value in enumerate(parameter_set): # iterate over the value of the channel for pulse
 
-                t = np.arange(t0, times[iy])
-                t_solved = np.concatenate((t_solved, t))
-                t0 = times[iy]
+            channel_parameters = parameter_sets[channel_type]
+            channel_function = channel_types[channel_type]
 
-                if stimulus_type is not None: # there is a channel
-                    parameters = default_parameters(i_app=0)
-                    parameters['g_syn'] = parameter_value
-                    parameters['e_syn'] = e_syn
-                else:
-                    parameters = default_parameters(i_app=parameter_value)
+            if channel_type == 'i_app':
+                parameter = 'i_app'
+            else:
+                parameter = 'g_syn'
 
-                state = odeint(synaptic_3d, ic, t, args=(parameters, stimulus_type))
+            pattern = {0: channel_parameters[0],
+                       2000: channel_parameters[1],
+                       8000: channel_parameters[2]}  # at t=0 set parameter to p[0], at t=2000 set parameter to p[1]...
 
-                ic = state[-1, :] # maintain the initial condition of the next time step
+            end_time = 10000
+            ic = [-65, 1, 1]
 
-                solution = np.vstack((solution, state))
-
-            solution = solution[1:, :]  # first row is [0,0] for starting shape so omit
+            # lambda function is to set the channel_function
+            solution, t_solved, stimulus = pulse(lambda s, t, p: synaptic_3d(s, t, p, channel_function),
+                                                 parameter, pattern, end_time, ic)
 
             plt.plot(t_solved, solution[:, 0], 'k')
 
@@ -74,9 +62,6 @@ def __figure6__():
             x_label = ""
             x_ticklabel = []
             if (2 * ix + iz + 1) == 5 or (2 * ix + iz + 1) == 6:
-                stimulus = np.zeros(t_solved.shape)
-                stimulus[(t_solved > times[0]) & (t_solved < times[1])] = 1
-
                 plt.plot(t_solved, 10 * stimulus - 80, 'grey')
                 x_label = "t (ms)"
                 x_ticklabel = None

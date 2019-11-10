@@ -1,5 +1,7 @@
 import sympy
+from scipy.integrate import odeint
 
+from ode_functions.current import sodium_current, total_current
 from ode_functions.gating import *
 
 
@@ -58,7 +60,7 @@ def ode_3d(state, t, parameters, synapse=None, scale=1, exp=np.exp):
     i_syn = 0
     if synapse is not None:
         g_syn = parameters['g_syn']
-        e_syn = parameters['e_syn']
+        e_syn = 0  # parameters['e_syn'] I'm not sure about this?
 
         i_syn = synapse(v, g_syn, e_syn)
 
@@ -175,3 +177,84 @@ def default_parameters(i_app=0, g_na=8):
               'i_app': i_app}
 
     return params
+
+
+def pattern_to_window_and_value(pattern: dict, end_time):
+    times = list(pattern.keys())
+    values = list(pattern.values())
+
+    # make a set of time windows (times[0], times[1]), (times[1], times[2])... (times[-1], end_time)
+    window = list(zip(times[:-1], times[1:])) + [(times[-1], end_time)]
+
+    return list(zip(window, values))
+
+
+def pulse(function, parameter, pattern: dict, end_time, ic, **kwargs):
+    """
+    Apply a time dependent "pulse" to an ODE system.
+
+    A pulse is a sequence of discrete changes to a constant parameters. The ODE is solved for each value seperately and
+    stitched together with the IC of the next step being the end point of the current step
+
+    For example injecting a dc-current at t=1000
+    :param function: ODE function to apply pulse to
+    :param parameter: Parameter to
+    :param pattern: A dictionary of time:value pairs {0: 0, 1000:1} will set the parameter to 0 at t=0 and 1 and t=1000
+    :param end_time: Time to end the simulation at
+    :param ic: Simulation initial condition
+    :param kwargs: Additional parameters to set for default parameters (?)
+    :return: The solved continuous ode, the time points and the waveform of the property
+    """
+
+    solution = np.array([0] * len(ic))  # needs dummy data to keep shape for vstack
+    t_solved = np.array([])
+    stimulus = np.array([])
+
+    sequence = pattern_to_window_and_value(pattern, end_time)
+    for (t0, t1), value in sequence:  # iterate over time windows and the value
+        parameters = default_parameters()
+        parameters[parameter] = value  # set the target parameter to a value
+
+        t = np.arange(t0, t1, 0.1)
+        t_solved = np.concatenate((t_solved, t))
+
+        state = odeint(function, ic, t, args=(parameters,))
+        ic = state[-1, :]  # maintain the initial condition for when this re-initializes at the next step
+
+        solution = np.vstack((solution, state))  # keep track of solution
+        stimulus = np.concatenate((stimulus, np.ones(t.shape) * value))
+
+    solution = solution[1:, :]  # first row is [0,0] dummy data so omit
+
+    return solution, t_solved, stimulus
+
+
+def current_voltage_curve(ode_function, clamp_voltage, time, ic, use_system_hs=True, current_function="PeakNa",
+                          follow=False, **kwargs):
+    parameters = default_parameters(**kwargs)
+    current = np.zeros(clamp_voltage.shape)  # initialize empty IV curve
+    for iy, v in enumerate(clamp_voltage):  # for every voltage
+        state = odeint(voltage_clamp, ic, time, args=(parameters, ode_function))
+
+        if use_system_hs:
+            hs = state[:, 2]
+        else:
+            hs = 1
+
+        h = state[:, 1]
+        if current_function == "PeakNa":
+            ss_current = sodium_current(v, m_inf(v), parameters, h=h, hs=hs)  # last time is steady state
+        elif current_function == "Balance":
+            ss_current = -total_current(v, h, parameters, hs=hs)
+        else:
+            raise ValueError("Unknown Current")
+        if follow:  ## s.s. analysis.
+            # this makes the search more effecient for IV curves but breaks depolarization experiments
+            ic = [v] + state[-1, 1:].tolist()  # update the ic so it's near f.p
+            ss_current = ss_current[-1]
+        else:
+            pk = np.argmax(np.abs(ss_current))
+            ss_current = ss_current[pk]  # take peak (amplitude) current
+        current[iy] = ss_current
+
+    return current
