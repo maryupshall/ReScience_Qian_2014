@@ -76,7 +76,7 @@ def synaptic_3d(state, t, parameters, func):
     return ode_3d(state, t, parameters, synapse=func)
 
 
-def ode_5d(state, t, parameters):
+def ode_5d(state, t, parameters, shift=60):
     """
     5 dimensional ODE
 
@@ -100,7 +100,7 @@ def ode_5d(state, t, parameters):
     dh = - (h - (h_inf(v))) / (tau_h(v))
     dhs = - (hs - (hs_inf(v))) / (tau_hs(v))
     dm = - (m - (m_inf(v))) / (tau_m(v))
-    dn = - (n - (n_inf(v))) / (tau_n(v))
+    dn = - (n - (n_inf(v))) / (tau_n(v, shift=shift))
 
     return [dv, dh, dhs, dm, dn]
 
@@ -189,7 +189,7 @@ def pattern_to_window_and_value(pattern: dict, end_time):
     return list(zip(window, values))
 
 
-def pulse(function, parameter, pattern: dict, end_time, ic, **kwargs):
+def pulse(function, parameter, pattern: dict, end_time, ic, clamp_function=None, **kwargs):  # todo refactor for clamp
     """
     Apply a time dependent "pulse" to an ODE system.
 
@@ -202,6 +202,7 @@ def pulse(function, parameter, pattern: dict, end_time, ic, **kwargs):
     :param pattern: A dictionary of time:value pairs {0: 0, 1000:1} will set the parameter to 0 at t=0 and 1 and t=1000
     :param end_time: Time to end the simulation at
     :param ic: Simulation initial condition
+    :param clamp_function: Optional function to clamp voltage for
     :param kwargs: Additional parameters to set for default parameters (?)
     :return: The solved continuous ode, the time points and the waveform of the property
     """
@@ -212,13 +213,18 @@ def pulse(function, parameter, pattern: dict, end_time, ic, **kwargs):
 
     sequence = pattern_to_window_and_value(pattern, end_time)
     for (t0, t1), value in sequence:  # iterate over time windows and the value
-        parameters = default_parameters()
-        parameters[parameter] = value  # set the target parameter to a value
+        parameters = default_parameters(**kwargs)
+        if parameter is not None:  # voltage clamp does not set a parameter
+            parameters[parameter] = value  # set the target parameter to a value
 
         t = np.arange(t0, t1, 0.1)
         t_solved = np.concatenate((t_solved, t))
+        if clamp_function is None:
+            state = odeint(function, ic, t, args=(parameters,))
+        else:
+            ic[0] = value
+            state = odeint(function, ic, t, args=(parameters, clamp_function))
 
-        state = odeint(function, ic, t, args=(parameters,))
         ic = state[-1, :]  # maintain the initial condition for when this re-initializes at the next step
 
         solution = np.vstack((solution, state))  # keep track of solution

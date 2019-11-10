@@ -113,16 +113,17 @@ def tau_m(v, exp=np.exp):
     return 0.01 + 1 / (a + b)
 
 
-def tau_n(v, exp=np.exp):
+def tau_n(v, exp=np.exp, shift=60):
     """
     Time constant (\tau) for variable n
 
     :param v: Membrane potential
     :param exp: Exponential function to use
+    :param shift: Shift in the gating potential to highlight error in original paper: Original=40, we use 60
     :return: tau_n(v)
     """
 
-    return 1 + 19 * exp((-(np.log(1 + 0.05 * (v + 60)) / 0.05) ** 2) / 300)
+    return 1 + 19 * exp((-(np.log(1 + 0.05 * (v + shift)) / 0.05) ** 2) / 300)
 
 
 def f(h):
