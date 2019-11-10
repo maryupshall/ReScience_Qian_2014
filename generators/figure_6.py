@@ -1,7 +1,8 @@
+import numpy as np
+
 from helpers.plotting import *
 from ode_functions.current import nmda_current, ampa_current
 from ode_functions.diff_eq import synaptic_3d, pulse
-from ode_functions.gating import *
 
 
 def run():
@@ -18,15 +19,20 @@ def run():
     save_fig('6')
 
 
-def __figure6__():
+def __figure6__(ampa_scale=1 / 1000, nmda_scale=1 / 27200):
     channel_types = {'nmda': nmda_current, 'ampa': ampa_current, 'i_app': None}
 
     # parameters for each channel. There are two sets of parameters for the 2 regimes
-    all_a_parameters = {'nmda': [0, 0.060, 0], 'ampa': [0, 0.0023, 0], 'i_app': [0, 0.16, 0]}  # a parameters
-    all_b_parameters = {'nmda': [0, 0.060, 0], 'ampa': [0, 0.0007, 0], 'i_app': [0, 0.32, 0]}  # b parameters
 
-    for iz, parameter_sets in enumerate([all_a_parameters, all_b_parameters]):  # iterate over fig a/b parameter sets
+    parameters_left_figures = {'nmda': [0, 60 * nmda_scale, 0], 'ampa': [0, 2.3 * ampa_scale, 0], 'i_app': [0, 0.16, 0]}
+    parameters_right_figures = {'nmda': [0, 60 * nmda_scale, 0], 'ampa': [0, 7 * ampa_scale, 0], 'i_app': [0, 0.32, 0]}
+
+    """ iterate over fig a/b parameter sets"""
+    for iz, parameter_sets in enumerate([parameters_left_figures, parameters_right_figures]):
         for ix, channel_type in enumerate(['nmda', 'ampa', 'i_app']):  # iterate over type of channel nmda, ampa, inj.
+
+            extract_time = 7500
+
             plt.subplot(3, 2, 2 * ix + iz + 1)
 
             channel_parameters = parameter_sets[channel_type]
@@ -48,7 +54,10 @@ def __figure6__():
             solution, t_solved, stimulus = pulse(lambda s, t, p: synaptic_3d(s, t, p, channel_function),
                                                  parameter, pattern, end_time, ic)
 
+            extract_ix = np.where(t_solved > extract_time)[0][0]
+            block_potential = solution[extract_ix, 0]
             plt.plot(t_solved, solution[:, 0], 'k')
+            plt.text(7500, block_potential+10, '{0:.1f}'.format(block_potential), horizontalalignment='center')
 
             # plot setting generation - not germaine to simulations
             title = "A"

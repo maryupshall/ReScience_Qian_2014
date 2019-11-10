@@ -38,6 +38,8 @@ def __figure2a__(title):
 
     plt.plot(t_solved, solution[:, 0], "k")
     plt.plot(t_solved, stimulus - 70, "grey")
+    block_potential = solution[-1, 0]
+    plt.text(2500, block_potential + 10, '{0:.1f}'.format(block_potential), horizontalalignment='center')
     set_properties(title, y_label="v (mV)", y_tick=[-60, -30, 0, 30], x_tick=[0, 1500, 3000], x_limits=[0, 3000])
 
 
