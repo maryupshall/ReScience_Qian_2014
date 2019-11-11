@@ -249,7 +249,7 @@ def current_voltage_curve(ode_function, clamp_voltage, time, ic, use_system_hs=T
 
         h = state[:, 1]
         if current_function == "PeakNa":
-            ss_current = sodium_current(v, m_inf(v), parameters, h=h, hs=hs)  # last time is steady state
+            ss_current = sodium_current(state, parameters)  # last time is steady state
         elif current_function == "Balance":
             ss_current = -total_current(v, h, parameters, hs=hs)
         else:
@@ -264,3 +264,14 @@ def current_voltage_curve(ode_function, clamp_voltage, time, ic, use_system_hs=T
         current[iy] = ss_current
 
     return current
+
+
+def clamp_steady_state(v_clamp):
+    """
+    Determine the steady-state of ode_3d when clamped to a voltage
+
+    :param v_clamp: Voltage to clamp to
+    :return: Steady state of the neuron at v_clamp
+    """
+    state = odeint(voltage_clamp, [v_clamp, 1, 1], [0, 500], args=(default_parameters(), ode_3d))
+    return state[-1, :]

@@ -3,8 +3,8 @@ from scipy.integrate import odeint
 from scipy.signal import argrelmax
 from sympy import *
 
-from helpers.nullclines import nullcline_figure
-from helpers.plotting import *
+from ode_functions.nullclines import nullcline_figure
+from plotting import *
 from ode_functions.diff_eq import ode_3d, default_parameters, hs_clamp, pulse
 from ode_functions.gating import *
 

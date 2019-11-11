@@ -3,21 +3,31 @@ import numpy as np
 from ode_functions.gating import f, m_inf
 
 
-def sodium_current(v, m, parameters, h=1, hs=1):
+def sodium_current(solution, parameters):
     """
-    Model sodium current
+    Compute sodium current from 2d,3d and 5d model.
 
-    :param v: Membrane potential
-    :param m: m gating variable
-    :param parameters: Model parameters
-    :param h: Optional h gating variable
-    :param hs: Optional hs gating variable
+    Variables are extracted from the model and missing variables (low dimension) are assumed to be 1 such as hs
+
+    :param solution: odeint solution
+    :param parameters: Model parameters # todo make optional?
     :return: Sodium current
     """
 
+    """Extract sodium current parameters"""
     g_na = parameters['g_na']
     e_na = parameters['e_na']
-    return g_na * (v - e_na) * (m ** 3) * h * hs
+
+    """Extract or assign variables v,h, and hs"""
+    h = hs = 1
+    if solution.shape[1] == 2:  # hs does not exist in the 2d model
+        h = solution[:, 1]
+    elif solution.shape[1] >= 3:  # hs exists in both the 3d and 5d model
+        h = solution[:, 1]
+        hs = solution[:, 2]
+
+    v = solution[:, 0]
+    return g_na * (v - e_na) * (m_inf(v) ** 3) * h * hs
 
 
 def total_current(v, h, parameters, hs=1):

@@ -1,5 +1,5 @@
-from helpers.nullclines import nullcline_figure
-from helpers.plotting import *
+from ode_functions.nullclines import nullcline_figure
+from plotting import *
 from ode_functions.diff_eq import ode_2d, pulse
 from ode_functions.gating import *
 

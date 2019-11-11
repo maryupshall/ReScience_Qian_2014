@@ -1,8 +1,8 @@
 import PyDSTool
 from sympy import *
 
-from helpers.nullclines import nullcline_figure
-from helpers.plotting import *
+from ode_functions.nullclines import nullcline_figure
+from plotting import *
 from ode_functions.diff_eq import ode_2d, ode_3d, default_parameters, current_voltage_curve
 from ode_functions.gating import *
 

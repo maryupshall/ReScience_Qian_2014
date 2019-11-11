@@ -1,6 +1,6 @@
 import numpy as np
 
-from helpers.plotting import *
+from plotting import *
 from ode_functions.current import nmda_current, ampa_current
 from ode_functions.diff_eq import synaptic_3d, pulse
 
