@@ -37,7 +37,9 @@ def nullcline_v(v, i_app, hs=1):
 
     """Find self-consistent h value for every v on the nullcline"""
     for ix, _ in enumerate(v):
-        solvable_nullcline = partial(__nullcline_v_implicit__, v[ix], parameters, hs)  # make a function that takes h
+        solvable_nullcline = partial(
+            __nullcline_v_implicit__, v[ix], parameters, hs
+        )  # make a function that takes h
         nullcline[ix] = newton(solvable_nullcline, x0=0)
 
     return nullcline
@@ -68,18 +70,23 @@ def __nullcline_v_implicit__(v, parameters, hs, h):
     :return: v nullcline in implicit form
     """
 
-    i_app = parameters['i_app']
-    g_na = parameters['g_na']
-    g_k = parameters['g_k']
-    g_l = parameters['g_l']
-    e_na = parameters['e_na']
-    e_k = parameters['e_k']
-    e_l = parameters['e_l']
+    i_app = parameters["i_app"]
+    g_na = parameters["g_na"]
+    g_k = parameters["g_k"]
+    g_l = parameters["g_l"]
+    e_na = parameters["e_na"]
+    e_k = parameters["e_k"]
+    e_l = parameters["e_l"]
 
-    return i_app - g_l * (v - e_l) - g_k * (f(h) ** 3) * (v - e_k) - g_na * h * hs * (m_inf(v) ** 3) * (v - e_na)
+    return (
+        i_app
+        - g_l * (v - e_l)
+        - g_k * (f(h) ** 3) * (v - e_k)
+        - g_na * h * hs * (m_inf(v) ** 3) * (v - e_na)
+    )
 
 
-def nullcline_figure(v, i_app, stability, hs=1, h_color='black', v_color='grey'):
+def nullcline_figure(v, i_app, stability, hs=1, h_color="black", v_color="grey"):
     """
     Helper function for creating nullcline figure
 
@@ -94,7 +101,9 @@ def nullcline_figure(v, i_app, stability, hs=1, h_color='black', v_color='grey')
 
     """Extract and plot the h nullcline"""
     nh = nullcline_h(v)
-    plt.plot(v, nh, h_color, zorder=-1000)  # large negative zorder forces plotting on bottom
+    plt.plot(
+        v, nh, h_color, zorder=-1000
+    )  # large negative zorder forces plotting on bottom
 
     """Extract and plot the v nullcline"""
     nv = nullcline_v(v, i_app, hs=hs)
@@ -102,5 +111,7 @@ def nullcline_figure(v, i_app, stability, hs=1, h_color='black', v_color='grey')
 
     """Lazily compute intersection and plot the stability (where closest only: not true intersection) """
     cross_index = intersect(nh, nv)
-    style = 'k' if stability else 'none'
-    plt.scatter(v[cross_index], nv[cross_index], edgecolors='k', facecolor=style, zorder=1000)
+    style = "k" if stability else "none"
+    plt.scatter(
+        v[cross_index], nv[cross_index], edgecolors="k", facecolor=style, zorder=1000
+    )

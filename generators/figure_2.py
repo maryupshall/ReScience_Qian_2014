@@ -14,13 +14,13 @@ def run():
 
     init_figure(size=(5, 3))
     plt.subplot2grid((2, 2), (0, 0), colspan=2, rowspan=1)
-    __figure2a__('A')
+    __figure2a__("A")
 
     for ix, col in enumerate([0, 1]):
         plt.subplot2grid((2, 2), (1, col), colspan=1, rowspan=1)
-        __figure2b__('B' + str(ix + 1), panel=ix)
+        __figure2b__("B" + str(ix + 1), panel=ix)
 
-    save_fig('2')
+    save_fig("2")
 
 
 def __figure2a__(title):
@@ -37,16 +37,31 @@ def __figure2a__(title):
     initial_condition = [-35, 1]
 
     """Solve ode_2d for a current pulse with above parameters"""
-    solution, t_solved, stimulus = pulse(ode_2d, 'i_app', pattern, end_time, initial_condition)
+    solution, t_solved, stimulus = pulse(
+        ode_2d, "i_app", pattern, end_time, initial_condition
+    )
     v = solution[:, 0]
 
     """Annotate depolarization block potential"""
-    block_potential = v[-1]  # since the model remains in depolarization block the last time step is sufficient
-    plt.text(2500, block_potential + 10, '{0:.1f}'.format(block_potential), horizontalalignment='center')
+    block_potential = v[
+        -1
+    ]  # since the model remains in depolarization block the last time step is sufficient
+    plt.text(
+        2500,
+        block_potential + 10,
+        "{0:.1f}".format(block_potential),
+        horizontalalignment="center",
+    )
 
     plt.plot(t_solved, v, "k")
     plt.plot(t_solved, stimulus - 70, "grey")
-    set_properties(title, y_label="v (mV)", y_tick=[-60, -30, 0, 30], x_tick=[0, 1500, 3000], x_limits=[0, 3000])
+    set_properties(
+        title,
+        y_label="v (mV)",
+        y_tick=[-60, -30, 0, 30],
+        x_tick=[0, 1500, 3000],
+        x_limits=[0, 3000],
+    )
 
 
 def __figure2b__(title, panel=0):
@@ -70,5 +85,13 @@ def __figure2b__(title, panel=0):
     y_label = "h" if panel == 0 else ""
     y_ticklabel = None if panel == 0 else []  # todo clean non for default
 
-    set_properties(title, x_label="V (mV)", y_label=y_label, x_tick=[-50, 0, 50], y_tick=[0, 0.1, 0.2, 0.3, 0.4],
-                   x_limits=[-75, 50], y_limits=[0, 0.4], y_ticklabel=y_ticklabel)
+    set_properties(
+        title,
+        x_label="V (mV)",
+        y_label=y_label,
+        x_tick=[-50, 0, 50],
+        y_tick=[0, 0.1, 0.2, 0.3, 0.4],
+        x_limits=[-75, 50],
+        y_limits=[0, 0.4],
+        y_ticklabel=y_ticklabel,
+    )

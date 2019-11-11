@@ -7,19 +7,31 @@ def init_figure(size=(2, 2), dpi=96):
     plt.figure(figsize=size, dpi=dpi)
 
 
-def save_fig(name, extension='pdf', figure_path='figures', figure_prefix='figure'):
+def save_fig(name, extension="pdf", figure_path="figures", figure_prefix="figure"):
     plt.tight_layout()
 
-    plt.savefig(join(figure_path, figure_prefix + "_" + name + '.' + extension), format=extension)
-    plt.close('all')
+    plt.savefig(
+        join(figure_path, figure_prefix + "_" + name + "." + extension),
+        format=extension,
+    )
+    plt.close("all")
 
 
 def make_legend(legend, **kwargs):
     plt.legend(legend, fontsize=8, **kwargs)
 
 
-def set_properties(title, x_label="", y_label="", x_tick=None, y_tick=None, x_limits=None, y_limits=None,
-                   y_ticklabel=None, x_ticklabel=None):
+def set_properties(
+    title,
+    x_label="",
+    y_label="",
+    x_tick=None,
+    y_tick=None,
+    x_limits=None,
+    y_limits=None,
+    y_ticklabel=None,
+    x_ticklabel=None,
+):
     plot_label_size = 12
     tick_label_size = 10
 
@@ -42,5 +54,12 @@ def set_properties(title, x_label="", y_label="", x_tick=None, y_tick=None, x_li
     plt.xlim(x_limits)
     plt.ylim(y_limits)
 
-    plt.text(0, 1, title, horizontalalignment='left', verticalalignment='bottom', transform=plt.gca().transAxes)
+    plt.text(
+        0,
+        1,
+        title,
+        horizontalalignment="left",
+        verticalalignment="bottom",
+        transform=plt.gca().transAxes,
+    )
     plt.tight_layout()

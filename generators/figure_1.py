@@ -15,17 +15,17 @@ def run():
 
     init_figure(size=(7, 3))
     plt.subplot2grid((2, 6), (0, 0), colspan=2, rowspan=1)
-    __figure1a__('A')
+    __figure1a__("A")
 
     plt.subplot2grid((2, 6), (0, 2), colspan=2, rowspan=1)
-    __figure1b__('B')
+    __figure1b__("B")
 
     plt.subplot2grid((2, 6), (0, 4), colspan=2, rowspan=1)
-    __figure1c__('C')
+    __figure1c__("C")
 
     for ix, col in enumerate([0, 3]):
         plt.subplot2grid((2, 6), (1, col), colspan=3, rowspan=1)
-        __figure1d__('D' + str(ix + 1), panel=ix)
+        __figure1d__("D" + str(ix + 1), panel=ix)
 
     save_fig("1")
 
@@ -40,7 +40,7 @@ def __figure1_supplemental_files__():
     This gives a plot scaled to almost 0 because this is a negligible effective channel density
     """
     paper_value = 5.92 / 1e6  # nS/cm^2 in mS/cm^2
-    __figure1a__('Supplemental 1A(v1)', g_na=paper_value)
+    __figure1a__("Supplemental 1A(v1)", g_na=paper_value)
     plt.ylim([-1, 1])  # reset to make line visible
     save_fig("supp_1A_v1")
 
@@ -48,34 +48,36 @@ def __figure1_supplemental_files__():
     If we assume the paper mis-reported the number 5.92mS/cm^2 as 5.92nS/cm^2 then we get a plot scaled by ~2
     The "onset of current" at ~-50 mV and the reversal potential at ~60mV is preserved
     """
-    __figure1a__('Supplemental 1A(v2)', g_na=5.92)  # assume units incorrect and meant mS/cm^2
+    __figure1a__(
+        "Supplemental 1A(v2)", g_na=5.92
+    )  # assume units incorrect and meant mS/cm^2
     save_fig("supp_1A_v2")
 
     """
     Similarly to figure 1A they report 9.12nS/cm^2 again we will assume this 9.12nS but 9.12mS/cm^2 additionally if we
     use a pule width of 3ms as reported we see the current is far too large
     """
-    __figure1b__('Supplemental 1B(v1)', g_na=9.12, pulse_width=3)
+    __figure1b__("Supplemental 1B(v1)", g_na=9.12, pulse_width=3)
     save_fig("supp_1B_v1")
 
     """
     If we adjust g_na and leave the pulse width at 3ms we get an appropriate current scale but the current does not 
     decay enough.
     """
-    __figure1b__('Supplemental 1B(v2)', pulse_width=3)
+    __figure1b__("Supplemental 1B(v2)", pulse_width=3)
     save_fig("supp_1B_v2")
 
     """
     If we leave g_na at 9.12mS/cm^2 and set the pulse width to 5ms we still see a current that's ~2x too large
     """
-    __figure1b__('Supplemental 1B(v3)', g_na=9.12)
+    __figure1b__("Supplemental 1B(v3)", g_na=9.12)
     save_fig("supp_1B_v3")
 
     """
     If we use the original equation for tau_n (with the shift being 40mV) then we see a very distorted limit cycle in 
     the n,h phase space
     """
-    __figure1c__('Supplemental 1C', use_modified_tau_n=True)
+    __figure1c__("Supplemental 1C", use_modified_tau_n=True)
     save_fig("supp_1C")
 
     """
@@ -83,7 +85,9 @@ def __figure1_supplemental_files__():
     Incidentally this looks more like the GABA neuron in their cited Seutin and Engel paper (2010) with a rounded trough
     see figure 7B
     """
-    __figure1d__('Supplemental 1D2', panel=1, use_modified_tau_n=True)  # ix=1 means use 5D model
+    __figure1d__(
+        "Supplemental 1D2", panel=1, use_modified_tau_n=True
+    )  # ix=1 means use 5D model
     save_fig("supp_1D2")
 
 
@@ -119,14 +123,21 @@ def __figure1a__(title, g_na=5.92 * 0.514, v_reset=-120):
             holding_condition = holding_condition[:-1]  # drop hs dimension in 2d
 
         """Set plot properties for the 2 models"""
-        color, linestyle = ('grey', 'solid') if model is ode_3d else ('black', '--')
+        color, linestyle = ("grey", "solid") if model is ode_3d else ("black", "--")
 
-        current = current_voltage_curve(model, voltage, time_points, holding_condition, g_na=g_na)
+        current = current_voltage_curve(
+            model, voltage, time_points, holding_condition, g_na=g_na
+        )
         plt.plot(voltage, current, color=color, linestyle=linestyle)
 
-    make_legend(["3D", "2D"], loc='center left', bbox_to_anchor=(0.3, 1.05))
-    set_properties(title, x_label="V (mV)", y_label="peak I$_{Na}$($\mu$A/cm$^2$)", x_tick=[-80, -40, 0, 40],
-                   y_tick=[-160, 0])
+    make_legend(["3D", "2D"], loc="center left", bbox_to_anchor=(0.3, 1.05))
+    set_properties(
+        title,
+        x_label="V (mV)",
+        y_label="peak I$_{Na}$($\mu$A/cm$^2$)",
+        x_tick=[-80, -40, 0, 40],
+        y_tick=[-160, 0],
+    )
 
 
 def generate_clamp_pattern_1b(end_time, pulse_width=5):
@@ -142,12 +153,12 @@ def generate_clamp_pattern_1b(end_time, pulse_width=5):
     """
 
     pulse_period = 100
-    clamp_potential = {'low': -70, 'high': 0}
+    clamp_potential = {"low": -70, "high": 0}
 
     clamped_high = False
     segment_start = [-100 + pulse_width]
     segment_end = [0]
-    clamp_potential_sequence = [clamp_potential['low']]
+    clamp_potential_sequence = [clamp_potential["low"]]
 
     """Generate start and end times for the waveform until the simulation end is hit"""
     while segment_end[-1] < end_time:
@@ -155,13 +166,15 @@ def generate_clamp_pattern_1b(end_time, pulse_width=5):
         segment_start.append(segment_end[-1])
         if not clamped_high:
             remaining_time = pulse_width
-            clamp_potential_sequence.append(clamp_potential['high'])
+            clamp_potential_sequence.append(clamp_potential["high"])
             clamped_high = True
         else:
             remaining_time = pulse_period - pulse_width
-            clamp_potential_sequence.append(clamp_potential['low'])
+            clamp_potential_sequence.append(clamp_potential["low"])
             clamped_high = False
-        segment_end.append(segment_start[-1] + remaining_time)  # end: remaining time after new start time
+        segment_end.append(
+            segment_start[-1] + remaining_time
+        )  # end: remaining time after new start time
 
     """Return a dictionary of start_time:clamp_potential key-value pairs"""
     return {k: v for k, v in zip(segment_start, clamp_potential_sequence)}
@@ -188,12 +201,20 @@ def __figure1b__(title, g_na=5.92, pulse_width=5):  # todo clean up
     pattern = generate_clamp_pattern_1b(end_time, pulse_width=pulse_width)
     initial_condition = clamp_steady_state(pre_pulse_potential)
 
-    solution, time, waveform = pulse(ode_3d, 'v_clamp', pattern, end_time, initial_condition, g_na=g_na)
+    solution, time, waveform = pulse(
+        ode_3d, "v_clamp", pattern, end_time, initial_condition, g_na=g_na
+    )
 
     i_na = sodium_current(solution, default_parameters(g_na=g_na))
-    plt.plot(time, i_na, 'k')
-    set_properties(title, x_label="time (ms)", y_label="I$_{Na}$ (pA)", x_tick=[0, 200, 400], y_tick=[-250, -200, 0],
-                   x_limits=[-50, 450])
+    plt.plot(time, i_na, "k")
+    set_properties(
+        title,
+        x_label="time (ms)",
+        y_label="I$_{Na}$ (pA)",
+        x_tick=[0, 200, 400],
+        y_tick=[-250, -200, 0],
+        x_limits=[-50, 450],
+    )
 
 
 def __figure1c__(title, use_modified_tau_n=True):
@@ -207,19 +228,33 @@ def __figure1c__(title, use_modified_tau_n=True):
 
     """Run the simulation for 4200ms and start at an arbitrary point "close" to the limit cycle"""
     time_points = np.arange(0, 4200, 0.1)
-    initial_condition = [-55, 0, 0, 0, 0]  # Does not need to lie on limit cycle since we throw away transient
+    initial_condition = [
+        -55,
+        0,
+        0,
+        0,
+        0,
+    ]  # Does not need to lie on limit cycle since we throw away transient
     parameters = default_parameters()
 
     """Solve 5d model with our corrected tau_n"""
     if use_modified_tau_n:  # our replication version with modified tau_n
-        state = odeint(ode_5d, initial_condition, time_points, args=(parameters,), rtol=1e-3)
+        state = odeint(
+            ode_5d, initial_condition, time_points, args=(parameters,), rtol=1e-3
+        )
     else:
         original_ode_5d = partial(ode_5d, shift=40)  # todo put shift to be bool
-        state = odeint(original_ode_5d, initial_condition, time_points, args=(parameters,), rtol=1e-3)
+        state = odeint(
+            original_ode_5d,
+            initial_condition,
+            time_points,
+            args=(parameters,),
+            rtol=1e-3,
+        )
 
     """Extract h and n and discard the first half due to transient"""
-    h = state[int(len(time_points) / 2):, 1]
-    n = state[int(len(time_points) / 2):, 4]
+    h = state[int(len(time_points) / 2) :, 1]
+    n = state[int(len(time_points) / 2) :, 4]
 
     """Perform a fit on n = f(h)"""
     replicate_fit = np.poly1d(np.polyfit(h, n, deg=3))
@@ -228,9 +263,15 @@ def __figure1c__(title, use_modified_tau_n=True):
     plt.plot(h, n, c="grey")
     plt.plot(h, f(h), "k")  # todo rename f
 
-    make_legend(["n", "n=f(h)"], loc='center left', bbox_to_anchor=(0.3, 1.05))
-    set_properties(title, x_label="h", y_label="n", x_tick=[0, 0.2, 0.4, 0.6], y_tick=np.arange(0, 1, 0.2),
-                   x_limits=[0, 0.7])
+    make_legend(["n", "n=f(h)"], loc="center left", bbox_to_anchor=(0.3, 1.05))
+    set_properties(
+        title,
+        x_label="h",
+        y_label="n",
+        x_tick=[0, 0.2, 0.4, 0.6],
+        y_tick=np.arange(0, 1, 0.2),
+        x_limits=[0, 0.7],
+    )
 
 
 def __figure1d__(title, panel=0, use_modified_tau_n=True):
@@ -257,19 +298,37 @@ def __figure1d__(title, panel=0, use_modified_tau_n=True):
 
     """Solve 5d model with our corrected tau_n"""
     if use_modified_tau_n:  # our replication version with modified tau_n
-        state = odeint(model, initial_condition, time_points, args=(parameters,), rtol=1e-3)
+        state = odeint(
+            model, initial_condition, time_points, args=(parameters,), rtol=1e-3
+        )
     else:
         original_ode_5d = partial(ode_5d, shift=40)  # todo put shift to be bool
-        state = odeint(original_ode_5d, initial_condition, time_points, args=(parameters,), rtol=1e-3)
+        state = odeint(
+            original_ode_5d,
+            initial_condition,
+            time_points,
+            args=(parameters,),
+            rtol=1e-3,
+        )
 
     """Throw away the first 1000ms of the simulation"""
     t_throw_away = np.where(time_points > 1000)[0][0]
     state = state[t_throw_away:, :]
-    time_points = time_points[t_throw_away:] - time_points[t_throw_away]  # set t[0] to 0
+    time_points = (
+        time_points[t_throw_away:] - time_points[t_throw_away]
+    )  # set t[0] to 0
 
     plt.plot(time_points, state[:, 0], "k")
-    y_label = 'V (mV)' if panel == 0 else ""
+    y_label = "V (mV)" if panel == 0 else ""
     y_tick_label = None if panel == 0 else []
 
-    set_properties(title, x_label="time (ms)", y_label=y_label, y_tick=[-80, -40, 0], y_limits=[-80, 20],
-                   y_ticklabel=y_tick_label, x_tick=[0, 1000, 2000, 3000], x_limits=[0, 3000])
+    set_properties(
+        title,
+        x_label="time (ms)",
+        y_label=y_label,
+        y_tick=[-80, -40, 0],
+        y_limits=[-80, 20],
+        y_ticklabel=y_tick_label,
+        x_tick=[0, 1000, 2000, 3000],
+        x_limits=[0, 3000],
+    )

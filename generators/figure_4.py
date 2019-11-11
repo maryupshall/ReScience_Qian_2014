@@ -1,7 +1,12 @@
 import PyDSTool
 from sympy import *
 
-from ode_functions.diff_eq import ode_2d, ode_3d, default_parameters, current_voltage_curve
+from ode_functions.diff_eq import (
+    ode_2d,
+    ode_3d,
+    default_parameters,
+    current_voltage_curve,
+)
 from ode_functions.gating import *
 from ode_functions.nullclines import nullcline_figure
 from plotting import *
@@ -28,7 +33,7 @@ def run():
         plt.subplot2grid((4, 2), (3, ix), colspan=1, rowspan=1)
         __figure4c__("C" + str(ix + 1), panel=ix)
 
-    save_fig('4')
+    save_fig("4")
 
 
 def __figure4a__(title, panel=0):
@@ -50,14 +55,29 @@ def __figure4a__(title, panel=0):
 
     """Iterate over the different v nullclines from the different i_app and hs values"""
     for iy, (i_app, hs) in enumerate(zip(i_app_list, hs_list)):
-        nullcline_figure(v, i_app, stability=stability[panel][iy], hs=hs, h_color='g', v_color='r')
+        nullcline_figure(
+            v, i_app, stability=stability[panel][iy], hs=hs, h_color="g", v_color="r"
+        )
 
     if panel == 0:
-        set_properties(title, x_label="v (mV)", y_label="h", x_tick=[-40, 0], y_tick=[0, 0.05, 0.1, 0.15],
-                       x_limits=(-40, 5), y_limits=(0, 0.15))
+        set_properties(
+            title,
+            x_label="v (mV)",
+            y_label="h",
+            x_tick=[-40, 0],
+            y_tick=[0, 0.05, 0.1, 0.15],
+            x_limits=(-40, 5),
+            y_limits=(0, 0.15),
+        )
     else:
-        set_properties(title, x_label="v (mV)", x_tick=[-60, 20], y_tick=[0, 0.2, 0.4], x_limits=(-80, 20),
-                       y_limits=(0, 0.4))
+        set_properties(
+            title,
+            x_label="v (mV)",
+            x_tick=[-60, 20],
+            y_tick=[0, 0.2, 0.4],
+            x_limits=(-80, 20),
+            y_limits=(0, 0.4),
+        )
 
 
 def __figure4b__(title, panel=0):
@@ -79,8 +99,14 @@ def __figure4b__(title, panel=0):
         x_label = "I$_{app}$($\mu$A/cm$^2$)"
         x_tick = [-0.1, 0, 0.2, 0.1]
 
-    set_properties(title, y_label='$V_m$ (mV)', y_tick=[-80, 0, 30], x_label=x_label, x_tick=x_tick,
-                   x_limits=(min(x_tick), max(x_tick)))
+    set_properties(
+        title,
+        y_label="$V_m$ (mV)",
+        y_tick=[-80, 0, 30],
+        x_label=x_label,
+        x_tick=x_tick,
+        x_limits=(min(x_tick), max(x_tick)),
+    )
 
 
 def __figure4b1_continuation__():
@@ -94,52 +120,54 @@ def __figure4b1_continuation__():
 
     """Set parameters and convert to symbolic representation"""
     parameters = default_parameters(i_app=0)
-    v, h, i_app = symbols('v h i_app')
-    parameters['i_app'] = i_app
+    v, h, i_app = symbols("v h i_app")
+    parameters["i_app"] = i_app
     dydt = ode_2d([v, h], 0, parameters, exp=exp)
 
-    DSargs_1 = PyDSTool.args(name='bifn_1')
-    DSargs_1.pars = {'i_app': 0}
-    DSargs_1.varspecs = {'v': PyDSTool.convertPowers(str(dydt[0])),
-                         'h': PyDSTool.convertPowers(str(dydt[1]))}
-    DSargs_1.ics = {'v': 0, 'h': 0}
+    DSargs_1 = PyDSTool.args(name="bifn_1")
+    DSargs_1.pars = {"i_app": 0}
+    DSargs_1.varspecs = {
+        "v": PyDSTool.convertPowers(str(dydt[0])),
+        "h": PyDSTool.convertPowers(str(dydt[1])),
+    }
+    DSargs_1.ics = {"v": 0, "h": 0}
 
     ode_1 = PyDSTool.Generator.Vode_ODEsystem(DSargs_1)
-    ode_1.set(pars={'i_app': 0})
-    ode_1.set(ics={'v': -49, "h": 0.4})
+    ode_1.set(pars={"i_app": 0})
+    ode_1.set(ics={"v": -49, "h": 0.4})
     PyCont_1 = PyDSTool.ContClass(ode_1)
 
-    PCargs_1 = PyDSTool.args(name='EQ1_1', type='EP-C')
-    PCargs_1.freepars = ['i_app']
+    PCargs_1 = PyDSTool.args(name="EQ1_1", type="EP-C")
+    PCargs_1.freepars = ["i_app"]
     PCargs_1.MaxNumPoints = 500
     PCargs_1.MaxStepSize = 0.05
     PCargs_1.MinStepSize = 1e-5
     PCargs_1.StepSize = 1e-2
-    PCargs_1.LocBifPoints = 'all'
+    PCargs_1.LocBifPoints = "all"
     PCargs_1.SaveEigen = True
     PyCont_1.newCurve(PCargs_1)
-    PyCont_1['EQ1_1'].backward()
-    PyCont_1['EQ1_1'].forward()
-    PyCont_1['EQ1_1'].backward()
+    PyCont_1["EQ1_1"].backward()
+    PyCont_1["EQ1_1"].forward()
+    PyCont_1["EQ1_1"].backward()
 
-    PyCont_1['EQ1_1'].display(['i_app', 'v'], stability=True, figure=1)
+    PyCont_1["EQ1_1"].display(["i_app", "v"], stability=True, figure=1)
 
-    PCargs_1.name = 'LC1_1'
-    PCargs_1.type = 'LC-C'
-    PCargs_1.initpoint = 'EQ1_1:H1'
-    PCargs_1.freepars = ['i_app']
+    PCargs_1.name = "LC1_1"
+    PCargs_1.type = "LC-C"
+    PCargs_1.initpoint = "EQ1_1:H1"
+    PCargs_1.freepars = ["i_app"]
     PCargs_1.MaxNumPoints = 500
     PCargs_1.MaxStepSize = 0.1
-    PCargs_1.LocBifPoints = 'all'
+    PCargs_1.LocBifPoints = "all"
     PCargs_1.SaveEigen = True
     PyCont_1.newCurve(PCargs_1)
-    PyCont_1['LC1_1'].backward()
-    PyCont_1['LC1_1'].display(('i_app', 'v_min'), stability=True, figure=1)
-    PyCont_1['LC1_1'].display(('i_app', 'v_max'), stability=True, figure=1)
+    PyCont_1["LC1_1"].backward()
+    PyCont_1["LC1_1"].display(("i_app", "v_min"), stability=True, figure=1)
+    PyCont_1["LC1_1"].display(("i_app", "v_max"), stability=True, figure=1)
 
-    PyCont_1.plot.toggleLabels(visible='off', bytype=['P', 'RG', 'LP'])
-    PyCont_1.plot.togglePoints(visible='off', bytype=['P', 'RG', 'LP'])
-    plt.gca().set_title('')
+    PyCont_1.plot.toggleLabels(visible="off", bytype=["P", "RG", "LP"])
+    PyCont_1.plot.togglePoints(visible="off", bytype=["P", "RG", "LP"])
+    plt.gca().set_title("")
 
 
 def __figure4b2_continuation__():
@@ -154,56 +182,58 @@ def __figure4b2_continuation__():
     """Set parameters and convert to symbolic representation"""
 
     parameters = default_parameters(i_app=-0.1)
-    v, h, h_s, i_app = symbols('v h h_s i_app')
-    parameters['i_app'] = i_app
+    v, h, h_s, i_app = symbols("v h h_s i_app")
+    parameters["i_app"] = i_app
     dydt = ode_3d([v, h, h_s], 0, parameters, exp=exp)
 
-    DSargs_2 = PyDSTool.args(name='bifn_2')
-    DSargs_2.pars = {'i_app': 0}
-    DSargs_2.varspecs = {'v': PyDSTool.convertPowers(str(dydt[0])),
-                         'h': PyDSTool.convertPowers(str(dydt[1])),
-                         'h_s': PyDSTool.convertPowers(str(dydt[2]))}
-    DSargs_2.ics = {'v': 0, 'h': 0, 'h_s': 0}
+    DSargs_2 = PyDSTool.args(name="bifn_2")
+    DSargs_2.pars = {"i_app": 0}
+    DSargs_2.varspecs = {
+        "v": PyDSTool.convertPowers(str(dydt[0])),
+        "h": PyDSTool.convertPowers(str(dydt[1])),
+        "h_s": PyDSTool.convertPowers(str(dydt[2])),
+    }
+    DSargs_2.ics = {"v": 0, "h": 0, "h_s": 0}
 
     ode_2 = PyDSTool.Generator.Vode_ODEsystem(DSargs_2)
-    ode_2.set(pars={'i_app': -0.1})
-    ode_2.set(ics={'v': -67, "h": 0.77, "h_s": 1})
+    ode_2.set(pars={"i_app": -0.1})
+    ode_2.set(ics={"v": -67, "h": 0.77, "h_s": 1})
     PyCont_2 = PyDSTool.ContClass(ode_2)
 
-    PCargs_2 = PyDSTool.args(name='EQ1_2', type='EP-C')
-    PCargs_2.freepars = ['i_app']
+    PCargs_2 = PyDSTool.args(name="EQ1_2", type="EP-C")
+    PCargs_2.freepars = ["i_app"]
     PCargs_2.MaxNumPoints = 300
     PCargs_2.MaxStepSize = 0.1
     PCargs_2.MinStepSize = 1e-5
     PCargs_2.StepSize = 1e-2
-    PCargs_2.LocBifPoints = 'all'
+    PCargs_2.LocBifPoints = "all"
     PCargs_2.SaveEigen = True
     PyCont_2.newCurve(PCargs_2)
-    PyCont_2['EQ1_2'].backward()
+    PyCont_2["EQ1_2"].backward()
 
-    PyCont_2['EQ1_2'].display(['i_app', 'v'], stability=True, figure=1)
+    PyCont_2["EQ1_2"].display(["i_app", "v"], stability=True, figure=1)
 
-    PCargs_2.name = 'LC1_2'
-    PCargs_2.type = 'LC-C'
-    PCargs_2.initpoint = 'EQ1_2:H2'
-    PCargs_2.freepars = ['i_app']
+    PCargs_2.name = "LC1_2"
+    PCargs_2.type = "LC-C"
+    PCargs_2.initpoint = "EQ1_2:H2"
+    PCargs_2.freepars = ["i_app"]
     PCargs_2.MaxNumPoints = 400
     PCargs_2.MaxStepSize = 0.1
     PCargs_2.StepSize = 1e-2
-    PCargs_2.LocBifPoints = 'all'
+    PCargs_2.LocBifPoints = "all"
     PCargs_2.SaveEigen = True
     PyCont_2.newCurve(PCargs_2)
-    PyCont_2['LC1_2'].forward()
-    PyCont_2['LC1_2'].display(('i_app', 'v_min'), stability=True, figure=1)
-    PyCont_2['LC1_2'].display(('i_app', 'v_max'), stability=True, figure=1)
+    PyCont_2["LC1_2"].forward()
+    PyCont_2["LC1_2"].display(("i_app", "v_min"), stability=True, figure=1)
+    PyCont_2["LC1_2"].display(("i_app", "v_max"), stability=True, figure=1)
 
-    PyCont_2.plot.toggleLabels(visible='off', bytype=['P', 'RG'])
-    PyCont_2.plot.togglePoints(visible='off', bytype=['P', 'RG'])
+    PyCont_2.plot.toggleLabels(visible="off", bytype=["P", "RG"])
+    PyCont_2.plot.togglePoints(visible="off", bytype=["P", "RG"])
 
-    PyCont_2.plot.toggleLabels(visible='off', byname=['LPC2', 'LPC3'])
-    PyCont_2.plot.togglePoints(visible='off', byname=['LPC2', 'LPC3'])
+    PyCont_2.plot.toggleLabels(visible="off", byname=["LPC2", "LPC3"])
+    PyCont_2.plot.togglePoints(visible="off", byname=["LPC2", "LPC3"])
 
-    plt.gca().set_title('')
+    plt.gca().set_title("")
 
 
 def __figure4c__(title, panel=0):  # todo slightly different
@@ -229,12 +259,25 @@ def __figure4c__(title, panel=0):  # todo slightly different
 
     current = current_voltage_curve(model, voltage, time, ic, follow=True)
 
-    plt.plot(voltage, current, 'k')
-    plt.plot(voltage, np.zeros(np.shape(voltage)), '--', color='grey')
+    plt.plot(voltage, current, "k")
+    plt.plot(voltage, np.zeros(np.shape(voltage)), "--", color="grey")
 
     if panel == 0:
-        set_properties(title, x_label="Voltage (mV)", y_label="I$_{stim}$($\mu$A/cm$^2$)", x_tick=[-80, -40],
-                       y_tick=[-5, 0, 5], x_limits=(-100, -20), y_limits=(-5, 5))
+        set_properties(
+            title,
+            x_label="Voltage (mV)",
+            y_label="I$_{stim}$($\mu$A/cm$^2$)",
+            x_tick=[-80, -40],
+            y_tick=[-5, 0, 5],
+            x_limits=(-100, -20),
+            y_limits=(-5, 5),
+        )
     else:
-        set_properties(title, x_label="Voltage (mV)", x_tick=[-70, -60, -50], y_tick=[-0.1, 0, 0.1, 0.2],
-                       x_limits=(-70, -50), y_limits=(-0.1, 0.2))
+        set_properties(
+            title,
+            x_label="Voltage (mV)",
+            x_tick=[-70, -60, -50],
+            y_tick=[-0.1, 0, 0.1, 0.2],
+            x_limits=(-70, -50),
+            y_limits=(-0.1, 0.2),
+        )

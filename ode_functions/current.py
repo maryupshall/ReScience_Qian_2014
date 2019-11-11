@@ -15,8 +15,8 @@ def sodium_current(solution, parameters):
     """
 
     """Extract sodium current parameters"""
-    g_na = parameters['g_na']
-    e_na = parameters['e_na']
+    g_na = parameters["g_na"]
+    e_na = parameters["e_na"]
 
     """Extract or assign variables v,h, and hs"""
     hs = 1
@@ -40,16 +40,20 @@ def total_current(solution, parameters):
     """
 
     """Extract model parameters"""
-    g_k = parameters['g_k']
-    g_l = parameters['g_l']
-    e_k = parameters['e_k']
-    e_l = parameters['e_l']
+    g_k = parameters["g_k"]
+    g_l = parameters["g_l"]
+    e_k = parameters["e_k"]
+    e_l = parameters["e_l"]
 
     """Extract or assign variables v,h, and hs"""
     h = solution[:, 1]
     v = solution[:, 0]
 
-    return - (g_l * (v - e_l)) - sodium_current(solution, parameters) - (g_k * (f(h) ** 3) * (v - e_k))
+    return (
+        -(g_l * (v - e_l))
+        - sodium_current(solution, parameters)
+        - (g_k * (f(h) ** 3) * (v - e_k))
+    )
 
 
 def nmda_current(v, g_syn, e_syn, mg=1.4):

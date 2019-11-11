@@ -123,7 +123,7 @@ def tau_n(v, exp=np.exp, shift=60):
     :return: tau_n(v)
     """
 
-    return 1 + 19 * exp((-(np.log(1 + 0.05 * (v + shift)) / 0.05) ** 2) / 300)
+    return 1 + 19 * exp((-((np.log(1 + 0.05 * (v + shift)) / 0.05) ** 2)) / 300)
 
 
 def f(h):
@@ -139,7 +139,9 @@ def f(h):
     a2 = 6.8838
     a3 = -4.2079
 
-    fh = np.asarray(a0 + a1 * h + a2 * (h ** 2) + a3 * (h ** 3))  # make array for logical indexing
+    fh = np.asarray(
+        a0 + a1 * h + a2 * (h ** 2) + a3 * (h ** 3)
+    )  # make array for logical indexing
 
     try:  # if its an array
         fh[fh < 0] = 0
