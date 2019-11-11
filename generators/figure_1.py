@@ -186,10 +186,9 @@ def __figure1b__(title, g_na=5.92, pulse_width=5):  # todo clean up
     end_time = 500
     pre_pulse_potential = -80
     pattern = generate_clamp_pattern_1b(end_time, pulse_width=pulse_width)
-    pre_pulse_holding_condition = clamp_steady_state(pre_pulse_potential)
+    initial_condition = clamp_steady_state(pre_pulse_potential)
 
-    solution, time, waveform = pulse(voltage_clamp, 'v_clamp', pattern, end_time, pre_pulse_holding_condition,
-                                     clamp_function=ode_3d, g_na=g_na)  # todo: still needs refactoring
+    solution, time, waveform = pulse(ode_3d, 'v_clamp', pattern, end_time, initial_condition, g_na=g_na)
 
     i_na = sodium_current(solution, default_parameters(g_na=g_na))
     plt.plot(time, i_na, 'k')

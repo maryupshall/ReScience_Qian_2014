@@ -1,8 +1,10 @@
+from functools import partial
+
 import numpy as np
 
-from plotting import *
 from ode_functions.current import nmda_current, ampa_current
-from ode_functions.diff_eq import synaptic_3d, pulse
+from ode_functions.diff_eq import pulse, ode_3d
+from plotting import *
 
 
 def run():
@@ -51,13 +53,13 @@ def __figure6__(ampa_scale=1 / 1000, nmda_scale=1 / 27200):
             ic = [-65, 1, 1]
 
             # lambda function is to set the channel_function
-            solution, t_solved, stimulus = pulse(lambda s, t, p: synaptic_3d(s, t, p, channel_function),
-                                                 parameter, pattern, end_time, ic)
+            synapse_model = partial(ode_3d, synapse=channel_function)
+            solution, t_solved, stimulus = pulse(synapse_model, parameter, pattern, end_time, ic)
 
             extract_ix = np.where(t_solved > extract_time)[0][0]
             block_potential = solution[extract_ix, 0]
             plt.plot(t_solved, solution[:, 0], 'k')
-            plt.text(7500, block_potential+10, '{0:.1f}'.format(block_potential), horizontalalignment='center')
+            plt.text(7500, block_potential + 10, '{0:.1f}'.format(block_potential), horizontalalignment='center')
 
             # plot setting generation - not germaine to simulations
             title = "A"

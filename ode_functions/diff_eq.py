@@ -72,10 +72,6 @@ def ode_3d(state, t, parameters, synapse=None, scale=1, exp=np.exp):
     return [dv, dh, dhs]
 
 
-def synaptic_3d(state, t, parameters, func):
-    return ode_3d(state, t, parameters, synapse=func)
-
-
 def ode_5d(state, t, parameters, shift=60):
     """
     5 dimensional ODE
@@ -197,7 +193,35 @@ def pattern_to_window_and_value(pattern, end_time):
     return list(zip(window, values))
 
 
-def pulse(function, parameter, pattern: dict, end_time, ic, clamp_function=None, **kwargs):  # todo refactor for clamp
+def pulse_ode_call(model_function, ic, t, parameter_name, value, model_parameters):
+    """
+    Handle the decision making for how to call odeint when parameter is v_clamp or not
+
+    Swaps model_function for voltage_clap when clamping and passes the model function in arguments
+
+    :param model_function: Either function to pulse or function to clamp and clamp is pulsed
+    :param ic: Initial conditions
+    :param t: Time for ode
+    :param parameter_name: Name of parameter or flag to v_clamp
+    :param value: Value of parameter or clamp potential
+    :param model_parameters: ode model parameters
+    :return: ODE solution
+    """
+
+    """v_clamp the ic, set voltage_clamp to be solved and pass the model function in args"""
+    if parameter_name is 'v_clamp':
+        ic[0] = value  # set voltage to parameter value
+        ode_function = voltage_clamp
+        args = (model_parameters, model_function)
+    else:
+        """Pass parameters as args and solve the specified function"""
+        args = (model_parameters,)
+        ode_function = model_function
+
+    return odeint(ode_function, ic, t, args=args)
+
+
+def pulse(function, parameter, pattern: dict, end_time, ic, **kwargs):  # todo refactor for clamp
     """
     Apply a time dependent "pulse" to an ODE system.
 
@@ -210,37 +234,35 @@ def pulse(function, parameter, pattern: dict, end_time, ic, clamp_function=None,
     :param pattern: A dictionary of time:value pairs {0: 0, 1000:1} will set the parameter to 0 at t=0 and 1 and t=1000
     :param end_time: Time to end the simulation at
     :param ic: Simulation initial condition
-    :param clamp_function: Optional function to clamp voltage for
     :param kwargs: Additional parameters to set for default parameters (?)
     :return: The solved continuous ode, the time points and the waveform of the property
     """
 
+    """Initialize data holders"""
     solution = np.array([0] * len(ic))  # needs dummy data to keep shape for vstack
     t_solved = np.array([])
     stimulus = np.array([])
 
     sequence = pattern_to_window_and_value(pattern, end_time)
-    for (t0, t1), value in sequence:  # iterate over time windows and the value
+    """iterate over the time windows and set the parameter to value during the window"""
+    for (t0, t1), value in sequence:
         parameters = default_parameters(**kwargs)
-        if parameter is not None:  # voltage clamp does not set a parameter
-            parameters[parameter] = value  # set the target parameter to a value
+        parameters[parameter] = value  # set target parameter, this will also add the clamp_function but it wont be used
 
+        """generate new time steps and save"""
         t = np.arange(t0, t1, 0.1)
         t_solved = np.concatenate((t_solved, t))
-        if clamp_function is None:
-            state = odeint(function, ic, t, args=(parameters,))
-        else:
-            ic[0] = value
-            state = odeint(function, ic, t, args=(parameters, clamp_function))
 
-        ic = state[-1, :]  # maintain the initial condition for when this re-initializes at the next step
+        """Call ode and get model solution update"""
+        block_solution = pulse_ode_call(function, ic, t, parameter, value, parameters)
 
-        solution = np.vstack((solution, state))  # keep track of solution
+        """Save solution and stimulus wave form and update ic for next window"""
+        solution = np.vstack((solution, block_solution))  # keep track of solution
         stimulus = np.concatenate((stimulus, np.ones(t.shape) * value))
+        ic = block_solution[-1, :]
 
-    solution = solution[1:, :]  # first row is [0,0] dummy data so omit
-
-    return solution, t_solved, stimulus
+    """first row of solution is dummy data so omit"""
+    return solution[1:, :], t_solved, stimulus
 
 
 def compute_iv_current(solution, parameters, follow):
