@@ -120,7 +120,6 @@ def __figure3b__(title, ix=0):
     """
     Plot nullclines for different model regimes in different panels for 3B
 
-
     :param title: Plot title (panel label)
     :param ix: Which plot to make ix referes to the index if the below i_app_list and hs_list
     :return: None

@@ -1,10 +1,10 @@
 import PyDSTool
 from sympy import *
 
-from ode_functions.nullclines import nullcline_figure
-from plotting import *
 from ode_functions.diff_eq import ode_2d, ode_3d, default_parameters, current_voltage_curve
 from ode_functions.gating import *
+from ode_functions.nullclines import nullcline_figure
+from plotting import *
 
 
 def run():
@@ -16,44 +16,43 @@ def run():
     print("Running: Figure 4")
 
     init_figure(size=(6, 7))
-    plt.subplot2grid((4, 2), (0, 0), colspan=1, rowspan=1)
-    __figure4a__("A1", ix=0)
-    plt.subplot2grid((4, 2), (0, 1), colspan=1, rowspan=1)
-    __figure4a__("A2", ix=1)
+    for ix in [0, 1]:
+        plt.subplot2grid((4, 2), (0, ix), colspan=1, rowspan=1)
+        __figure4a__("A" + str(ix + 1), panel=ix)
 
-    plt.subplot2grid((4, 2), (1, 0), colspan=2, rowspan=1)
-    __figure4b__("B1", ix=0)
-    plt.subplot2grid((4, 2), (2, 0), colspan=2, rowspan=1)
-    __figure4b__("B2", ix=1)
+    for ix in [0, 1]:
+        plt.subplot2grid((4, 2), (ix + 1, 0), colspan=2, rowspan=1)
+        __figure4b__("B" + str(ix + 1), panel=ix)
 
-    plt.subplot2grid((4, 2), (3, 0), colspan=1, rowspan=1)
-    __figure4c__("C1", ix=0)
-    plt.subplot2grid((4, 2), (3, 1), colspan=1, rowspan=1)
-    __figure4c__("C2", ix=1)
+    for ix in [0, 1]:
+        plt.subplot2grid((4, 2), (3, ix), colspan=1, rowspan=1)
+        __figure4c__("C" + str(ix + 1), panel=ix)
 
     save_fig('4')
 
 
-def __figure4a__(title, ix=0):
+def __figure4a__(title, panel=0):
     """
-    Nullcline analysis of different shifts to nullclines
+    Plot nullclines for different model currents (ix)
 
     :param title: Plot title (panel label)
-    :param ix: Which plot to make, right shift (ix=0) or left shift (ix=1)
+    :param panel: Which plot to make ix refers to the index if the below i_app_list and hs_list
     :return: None
     """
 
     v = np.arange(-90, 50)
-    i_app_list = [[0, 3.5], [0.16, 0.16, 0.16]][ix]
-    hs_list = [[1, 1], [0.6, 0.2, 0.05]][ix]
+    """Select appropriate i_app and hs for the panel used"""
+    i_app_list = [[0, 3.5], [0.16, 0.16, 0.16]][panel]
+    hs_list = [[1, 1], [0.6, 0.2, 0.05]][panel]
 
+    """Stability for each curve on each panel"""
     stability = [[False, True], [False, False, True]]
 
+    """Iterate over the different v nullclines from the different i_app and hs values"""
     for iy, (i_app, hs) in enumerate(zip(i_app_list, hs_list)):
-        plot_h_nullcline = iy == 0  # only plot for first iteration
-        nullcline_figure(v, i_app, stability=stability[ix][iy], hs=hs, h_color='g', v_color='r')
+        nullcline_figure(v, i_app, stability=stability[panel][iy], hs=hs, h_color='g', v_color='r')
 
-    if ix == 0:
+    if panel == 0:
         set_properties(title, x_label="v (mV)", y_label="h", x_tick=[-40, 0], y_tick=[0, 0.05, 0.1, 0.15],
                        x_limits=(-40, 5), y_limits=(0, 0.15))
     else:
@@ -61,16 +60,17 @@ def __figure4a__(title, ix=0):
                        y_limits=(0, 0.4))
 
 
-def __figure4b__(title, ix=0):
+def __figure4b__(title, panel=0):
     """
-    Bifurcation analysis for 2D and 3D model
+    Perform bifurcation analysis of 2D and 3D system for 4B1/2
 
     :param title: Plot title (panel label)
-    :param ix: Which plot to make, 2D (ix=0) or 3d (ix=1)
+    :param panel: Which plot to make, 2D (panel=0) or 3d (panel=1)
     :return: None
     """
 
-    if ix == 0:
+    """Compute contunuation and plot bifurcation diagram depending on the panel"""
+    if panel == 0:
         __figure4b1_continuation__()
         x_label = ""
         x_tick = [-6, 0, 6]
@@ -87,9 +87,12 @@ def __figure4b1_continuation__():
     """
     Actual continuation analysis for 4B1. Contains commands to pyDSTool. Performs some formatting and continuation
 
+    Plotting commands are contained with continuation commands to keep pycont objects together
+
     :return: None
     """
 
+    """Set parameters and convert to symbolic representation"""
     parameters = default_parameters(i_app=0)
     v, h, i_app = symbols('v h i_app')
     parameters['i_app'] = i_app
@@ -143,8 +146,12 @@ def __figure4b2_continuation__():
     """
     Actual continuation analysis for 4B2. Contains commands to pyDSTool. Performs some formatting and continuation
 
+    Plotting commands are contained with continuation commands to keep pycont objects together
+
     :return: None
     """
+
+    """Set parameters and convert to symbolic representation"""
 
     parameters = default_parameters(i_app=-0.1)
     v, h, h_s, i_app = symbols('v h h_s i_app')
@@ -199,35 +206,38 @@ def __figure4b2_continuation__():
     plt.gca().set_title('')
 
 
-def __figure4c__(title, ix=0): # todo slightly different
+def __figure4c__(title, panel=0):  # todo slightly different
     """
-    IV curves for 2D and 3D model
+    Compute true IV curves for 2d and 3d model for figure 4C1/2
 
     :param title: Plot title (panel label)
-    :param ix: Which plot to make, 2D (ix=0) or 3d (ix=1)
+    :param panel: Which plot to make, 2D (label=0) or 3d (label=1)
     :return: None
     """
 
-    func = [ode_2d, ode_3d][ix]
-    voltage = np.arange(-100, 20, 0.5)
-    time = np.arange(0, 3000, 0.1)
+    """Select appropriate model given which panel"""
+    model = [ode_2d, ode_3d][panel]
 
-    ic = [-100, 1]
-    if ix == 0:  # 2d system
-        use_system_hs = False
-    else:
+    """Solve IV curve for voltage between -100 and 20 using 3000ms to ensure equilibrium is reached"""
+    voltage = np.arange(-100, 20)
+    time = np.arange(0, 3000)
+
+    ic = [-100, 1]  # at such hyperpolarized parameters h and hs are ~1
+    """Add dimension to 3d model"""
+    if model == ode_3d:
         ic += [1]
-        use_system_hs = True
+    ic = np.array(ic)  # needed before refactor: todo: here
 
-    ic = np.array(ic)
+    """Use system hs if the model is the 3d model"""
+    use_system_hs = model == ode_3d
 
-    current = current_voltage_curve(func, voltage, time, ic, use_system_hs=use_system_hs, current_function="Balance",
-                                    follow=True)
+    current = current_voltage_curve(model, voltage, time, ic, use_system_hs=use_system_hs, current_function="Balance",
+                                    follow=True)  # todo probably refactor this
 
     plt.plot(voltage, current, 'k')
     plt.plot(voltage, np.zeros(np.shape(voltage)), '--', color='grey')
 
-    if ix == 0:
+    if panel == 0:
         set_properties(title, x_label="Voltage (mV)", y_label="I$_{stim}$($\mu$A/cm$^2$)", x_tick=[-80, -40],
                        y_tick=[-5, 0, 5], x_limits=(-100, -20), y_limits=(-5, 5))
     else:
