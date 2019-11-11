@@ -4,7 +4,6 @@ from ode_functions.diff_eq import *
 from ode_functions.gating import *
 from plotting import *
 
-
 def run():
     """
     Top level runner for figure 1
@@ -272,12 +271,8 @@ def __figure1d__(title, panel=0, use_modified_tau_n=True):
     time_points = time_points[t_throw_away:] - time_points[t_throw_away]  # set t[0] to 0
 
     plt.plot(time_points, state[:, 0], "k")
-    y_label = 'v (mV)'
-    y_tick_label = None
-
-    if panel > 0:
-        y_label = ""
-        y_tick_label = []
+    y_label = 'V (mV)' if panel == 0 else ""
+    y_tick_label = None if panel == 0 else []
 
     set_properties(title, x_label="time (ms)", y_label=y_label, y_tick=[-80, -40, 0], y_limits=[-80, 20],
                    y_ticklabel=y_tick_label, x_tick=[0, 1000, 2000, 3000], x_limits=[0, 3000])

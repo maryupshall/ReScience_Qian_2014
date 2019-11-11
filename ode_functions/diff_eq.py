@@ -236,10 +236,16 @@ def pulse(function, parameter, pattern: dict, end_time, ic, clamp_function=None,
 
 
 def current_voltage_curve(ode_function, clamp_voltage, time, ic, use_system_hs=True, current_function="PeakNa",
-                          follow=False, **kwargs):
+                          follow=False, **kwargs):  # todo refactor
     parameters = default_parameters(**kwargs)
     current = np.zeros(clamp_voltage.shape)  # initialize empty IV curve
+    state = np.array([ic])
+    ic = ic.tolist()
     for iy, v in enumerate(clamp_voltage):  # for every voltage
+        if follow:
+            ic = [v] + state[-1, 1:].tolist()  # update the ic so it's near f.p
+        else:
+            ic = [v] + ic[1:]  # keep the recoverey values and change the v_clamp
         state = odeint(voltage_clamp, ic, time, args=(parameters, ode_function))
 
         if use_system_hs:
@@ -256,7 +262,6 @@ def current_voltage_curve(ode_function, clamp_voltage, time, ic, use_system_hs=T
             raise ValueError("Unknown Current")
         if follow:  ## s.s. analysis.
             # this makes the search more effecient for IV curves but breaks depolarization experiments
-            ic = [v] + state[-1, 1:].tolist()  # update the ic so it's near f.p
             ss_current = ss_current[-1]
         else:
             pk = np.argmax(np.abs(ss_current))

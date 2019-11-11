@@ -51,8 +51,7 @@ def __figure4a__(title, ix=0):
 
     for iy, (i_app, hs) in enumerate(zip(i_app_list, hs_list)):
         plot_h_nullcline = iy == 0  # only plot for first iteration
-        nullcline_figure(v, i_app, hs=hs, plot_h_nullcline=plot_h_nullcline == 0,
-                         stability=stability[ix][iy], h_color='g', v_color='r')
+        nullcline_figure(v, i_app, stability=stability[ix][iy], hs=hs, h_color='g', v_color='r')
 
     if ix == 0:
         set_properties(title, x_label="v (mV)", y_label="h", x_tick=[-40, 0], y_tick=[0, 0.05, 0.1, 0.15],
@@ -200,7 +199,7 @@ def __figure4b2_continuation__():
     plt.gca().set_title('')
 
 
-def __figure4c__(title, ix=0):
+def __figure4c__(title, ix=0): # todo slightly different
     """
     IV curves for 2D and 3D model
 
@@ -219,6 +218,8 @@ def __figure4c__(title, ix=0):
     else:
         ic += [1]
         use_system_hs = True
+
+    ic = np.array(ic)
 
     current = current_voltage_curve(func, voltage, time, ic, use_system_hs=use_system_hs, current_function="Balance",
                                     follow=True)
