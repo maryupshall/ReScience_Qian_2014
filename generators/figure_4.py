@@ -226,13 +226,8 @@ def __figure4c__(title, panel=0):  # todo slightly different
     """Add dimension to 3d model"""
     if model == ode_3d:
         ic += [1]
-    ic = np.array(ic)  # needed before refactor: todo: here
 
-    """Use system hs if the model is the 3d model"""
-    use_system_hs = model == ode_3d
-
-    current = current_voltage_curve(model, voltage, time, ic, use_system_hs=use_system_hs, current_function="Balance",
-                                    follow=True)  # todo probably refactor this
+    current = current_voltage_curve(model, voltage, time, ic, follow=True)
 
     plt.plot(voltage, current, 'k')
     plt.plot(voltage, np.zeros(np.shape(voltage)), '--', color='grey')

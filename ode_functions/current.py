@@ -19,37 +19,37 @@ def sodium_current(solution, parameters):
     e_na = parameters['e_na']
 
     """Extract or assign variables v,h, and hs"""
-    h = hs = 1
-    if solution.shape[1] == 2:  # hs does not exist in the 2d model
-        h = solution[:, 1]
-    elif solution.shape[1] >= 3:  # hs exists in both the 3d and 5d model
-        h = solution[:, 1]
+    hs = 1
+    if solution.shape[1] >= 3:  # hs exists in both the 3d and 5d model
         hs = solution[:, 2]
-
+    h = solution[:, 1]
     v = solution[:, 0]
+
     return g_na * (v - e_na) * (m_inf(v) ** 3) * h * hs
 
 
-def total_current(v, h, parameters, hs=1):
+def total_current(solution, parameters):
     """
-    Model total current
+    Compute sodium current from 2d,3d and 5d model.
 
-    :param v: Membrane potential
-    :param h: Optional h gating variable
-    :param parameters: Model parameters
-    :param hs: Optional hs gating variable
+    Variables are extracted from the model and missing variables (low dimension) are assumed to be 1 such as hs
+
+    :param solution: odeint solution
+    :param parameters: Model parameters # todo make optional?
     :return: Sodium current
     """
 
-    g_na = parameters['g_na']
+    """Extract model parameters"""
     g_k = parameters['g_k']
     g_l = parameters['g_l']
-    e_na = parameters['e_na']
     e_k = parameters['e_k']
     e_l = parameters['e_l']
 
-    return - (g_l * (v - e_l)) - (g_na * (m_inf(v) ** 3) * h * hs * (v - e_na)) - (
-            g_k * (f(h[-1]) ** 3) * (v - e_k))  # todo: integrate with sodium_current()
+    """Extract or assign variables v,h, and hs"""
+    h = solution[:, 1]
+    v = solution[:, 0]
+
+    return - (g_l * (v - e_l)) - sodium_current(solution, parameters) - (g_k * (f(h) ** 3) * (v - e_k))
 
 
 def nmda_current(v, g_syn, e_syn, mg=1.4):

@@ -118,7 +118,6 @@ def voltage_clamp(state, t, parameters, func):
     :return: The ODE with voltage clamped
     """
 
-    # todo: smart way to handle function included with parameters
     return __clamp__(state, t, parameters, func, 0)
 
 
@@ -179,13 +178,22 @@ def default_parameters(i_app=0, g_na=8):
     return params
 
 
-def pattern_to_window_and_value(pattern: dict, end_time):
+def pattern_to_window_and_value(pattern, end_time):
+    """
+    Convert a pattern dictionary to an iterable tuple of time windows (start, stop) and parameter values
+
+    :param pattern: Pattern dict formatted like {t_event:value}
+    :param end_time: End of the simulation
+    :return: Iterable pattern of windows and values
+    """
+
     times = list(pattern.keys())
     values = list(pattern.values())
 
-    # make a set of time windows (times[0], times[1]), (times[1], times[2])... (times[-1], end_time)
+    """make a set of time windows (times[0], times[1]), (times[1], times[2])... (times[-1], end_time)"""
     window = list(zip(times[:-1], times[1:])) + [(times[-1], end_time)]
 
+    """zip window and parameter value for convenient unpacking"""
     return list(zip(window, values))
 
 
@@ -235,40 +243,77 @@ def pulse(function, parameter, pattern: dict, end_time, ic, clamp_function=None,
     return solution, t_solved, stimulus
 
 
-def current_voltage_curve(ode_function, clamp_voltage, time, ic, use_system_hs=True, current_function="PeakNa",
-                          follow=False, **kwargs):  # todo refactor
+def compute_iv_current(solution, parameters, follow):
+    """
+    Compute the current of the IV curve at a given clamp voltage given the follow rule
+
+    If follow mode: I(V) is the steady state current, otherwise we use the peak amplitude current of the transient
+
+    :param solution: odeint solution
+    :param parameters: Model parameters
+    :param follow: Follow mode or peak mode (True/False)
+    :return: I(V)
+    """
+
+    if follow:
+        return -total_current(solution, parameters)[-1]  # [-1] give steady state
+    else:
+        i_na = sodium_current(solution, parameters)
+        pk = np.argmax(np.abs(i_na))  # intermediate pk allows for sign preservation
+        return i_na[pk]
+
+
+def current_voltage_curve(ode_function, clamp_voltage, time, ic, follow=False, **kwargs):
+    """
+    Compute IV curve in either follow mode or peak mode
+
+    In follow mode a traditional IV curve is computed where the I(V) is the steady state current at a clamped voltage
+    for efficiency the initial condition of the next voltage level is the steady state of the present clamp.
+
+    In peak mode (follow = False) the voltage is held at some reset voltage. The voltage is the clamped at the voltage
+    for the IV curve and the peak (transient) current is used
+
+    :param ode_function: The function to call for voltage_clamp (the model used)
+    :param clamp_voltage: Voltages to clamp during the IV curve
+    :param time: Time steps to solve the ode
+    :param ic: Initial condition or reset condition
+    :param follow: Optional flag is follow model or peak mode is used: defaults to peak mode, follow=False
+    :param kwargs: Optional settings for the parameters such as g_na or i_leak
+    :return: I(V)
+    """
+
+    """Initialize IV curve"""
     parameters = default_parameters(**kwargs)
-    current = np.zeros(clamp_voltage.shape)  # initialize empty IV curve
-    state = np.array([ic])
-    ic = ic.tolist()
-    for iy, v in enumerate(clamp_voltage):  # for every voltage
-        if follow:
-            ic = [v] + state[-1, 1:].tolist()  # update the ic so it's near f.p
-        else:
-            ic = [v] + ic[1:]  # keep the recoverey values and change the v_clamp
+    current = np.zeros(clamp_voltage.shape)
+    state = np.array([ic])  # inital state is ic; array([ic]) gives a 2d array
+
+    """Update model inital state according to IV curve type, run voltage clamp and save I(V)"""
+    for ix, v in enumerate(clamp_voltage):
+        ic = update_ic(v, ic, state, follow)
         state = odeint(voltage_clamp, ic, time, args=(parameters, ode_function))
-
-        if use_system_hs:
-            hs = state[:, 2]
-        else:
-            hs = 1
-
-        h = state[:, 1]
-        if current_function == "PeakNa":
-            ss_current = sodium_current(state, parameters)  # last time is steady state
-        elif current_function == "Balance":
-            ss_current = -total_current(v, h, parameters, hs=hs)
-        else:
-            raise ValueError("Unknown Current")
-        if follow:  ## s.s. analysis.
-            # this makes the search more effecient for IV curves but breaks depolarization experiments
-            ss_current = ss_current[-1]
-        else:
-            pk = np.argmax(np.abs(ss_current))
-            ss_current = ss_current[pk]  # take peak (amplitude) current
-        current[iy] = ss_current
+        current[ix] = compute_iv_current(state, parameters, follow)
 
     return current
+
+
+def update_ic(v, ic, state, follow):
+    """
+    Set the initial condition for the IV curve at a particular clamp voltage depending on the mode
+
+    If follow mode then the clamp voltage is combined with the state. Otherwise the clamp voltage is combined with the
+    reset ic
+
+    :param v: Clamp voltage
+    :param ic: Reset conditions
+    :param state: Steady state
+    :param follow: Follow mode or peak mode (true/false)
+    :return: Updated ic according to follow rule
+    """
+
+    if follow:
+        return np.concatenate([[v], state[-1, 1:]])  # ic = [set voltage, ss of old simulation]
+    else:
+        return np.concatenate([[v], ic[1:]])  # ic = [set voltage, ss of holding]
 
 
 def clamp_steady_state(v_clamp):

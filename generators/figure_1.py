@@ -4,6 +4,7 @@ from ode_functions.diff_eq import *
 from ode_functions.gating import *
 from plotting import *
 
+
 def run():
     """
     Top level runner for figure 1
@@ -112,18 +113,15 @@ def __figure1a__(title, g_na=5.92 * 0.514, v_reset=-120):
 
     """Perform the same voltage clamp experiment """
     for model in [ode_3d, ode_2d]:  # use 2d then 3d ode
-        use_system_hs = True  # use the hs from the ode
 
         """Set different parameters of the function is the 2d ode"""
         if model is ode_2d:
             holding_condition = holding_condition[:-1]  # drop hs dimension in 2d
-            use_system_hs = False  # hs does not exist it will be set to 1
 
         """Set plot properties for the 2 models"""
         color, linestyle = ('grey', 'solid') if model is ode_3d else ('black', '--')
 
-        current = current_voltage_curve(model, voltage, time_points, holding_condition,
-                                        use_system_hs=use_system_hs, g_na=g_na)
+        current = current_voltage_curve(model, voltage, time_points, holding_condition, g_na=g_na)
         plt.plot(voltage, current, color=color, linestyle=linestyle)
 
     make_legend(["3D", "2D"], loc='center left', bbox_to_anchor=(0.3, 1.05))
@@ -199,7 +197,7 @@ def __figure1b__(title, g_na=5.92, pulse_width=5):  # todo clean up
                    x_limits=[-50, 450])
 
 
-def __figure1c__(title, use_modified_tau_n=False):
+def __figure1c__(title, use_modified_tau_n=True):
     """
     Compute limit cycle in n,h phase space for the 5d model and compute the approximation n=f(h) for 1C
 
@@ -260,7 +258,7 @@ def __figure1d__(title, panel=0, use_modified_tau_n=True):
 
     """Solve 5d model with our corrected tau_n"""
     if use_modified_tau_n:  # our replication version with modified tau_n
-        state = odeint(model, initial_condition, time_points, args=(parameters,),rtol=1e-3)
+        state = odeint(model, initial_condition, time_points, args=(parameters,), rtol=1e-3)
     else:
         original_ode_5d = partial(ode_5d, shift=40)  # todo put shift to be bool
         state = odeint(original_ode_5d, initial_condition, time_points, args=(parameters,), rtol=1e-3)
