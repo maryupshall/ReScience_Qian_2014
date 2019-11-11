@@ -110,7 +110,7 @@ def __figure3b__(title, ix=0):
     i_app = [0, 0.16, 0.16, 0.16][ix]  # different panels (ix) use a different i_app: set the appropriate one
     hs = [0.6, 0.6, 0.2, 0.05][ix]  # different panels (ix) use a different hs: set the appropriate one
 
-    nullcline_figure(v, i_app, hs=hs, plot_h_nullcline=True, stability=ix == 3)
+    nullcline_figure(v, i_app, stability=ix == 3, hs=hs)
 
     y_label = ""
     y_ticklabel = []
