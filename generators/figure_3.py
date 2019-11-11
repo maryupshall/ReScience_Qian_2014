@@ -1,12 +1,14 @@
+from functools import partial
+
 import PyDSTool
 from scipy.integrate import odeint
 from scipy.signal import argrelmax
 from sympy import *
 
-from ode_functions.nullclines import nullcline_figure
-from plotting import *
 from ode_functions.diff_eq import ode_3d, default_parameters, hs_clamp, pulse
 from ode_functions.gating import *
+from ode_functions.nullclines import nullcline_figure
+from plotting import *
 
 
 def run():
@@ -18,11 +20,9 @@ def run():
     print("Running: Figure 3")
 
     init_figure(size=(6, 8))
-    plt.subplot2grid((5, 4), (0, 0), colspan=4, rowspan=1)
-    __figure3a__('A1', fig_num=0)
-
-    plt.subplot2grid((5, 4), (1, 0), colspan=4, rowspan=1)
-    __figure3a__('A2', fig_num=1)
+    for ix in np.arange(2):
+        plt.subplot2grid((5, 4), (ix, 0), colspan=4, rowspan=1)
+        __figure3a__('A' + str(ix + 1), ix=ix)
 
     for ix in np.arange(4):
         plt.subplot2grid((5, 4), (2, ix), colspan=1, rowspan=1)
@@ -37,46 +37,62 @@ def run():
     save_fig("3")
 
 
-def __figure3a__(title, fig_num=0):
+def __plot_secondary_frequency__(times, frequency):
     """
-    Model response: depolarization block
+    Function to plot instantaneous frequency
+
+    :param times: List of times frequency is calculated
+    :param frequency: List of frequencies
+    :return: Nine
+    """
+
+    original_axis = plt.gca()  # keep reference to main axis
+
+    """Plot frequency on a secondary axis and set limits to scale values to near original figure"""
+    ax2 = original_axis.twinx()
+    ax2.plot(times, frequency, 'ko', markersize=1)
+    ax2.set_ylim([1, 10])  # gives nice scaling
+    ax2.set_yticks([7, 9])
+    ax2.set_ylabel('Frequency (Hz)')
+
+    plt.sca(original_axis)  # return plt.* command to the original axis
+
+
+def __figure3a__(title, ix=0):
+    """
+    Compute 3d model response into depolarization block for step current input for figure 3A
 
     :param title: Plot title (panel label)
-    :param fig_num: Which figure to run: voltage (fig_num=0) or h (fig_num=1)
+    :param ix: Which figure to run: voltage (fig_num=0) or h (fig_num=1)
     :return: None
     """
 
+    """Compute a 6000ms simulation with i_app=0 at t=0 and then i_app=0.16 at t=2000"""
     pattern = {0: 0, 2000: 0.16}  # set i_app=0 at t=0. Change to i_app=0,16 at t=2000
     end_time = 6000
     ic = [-55, 0, 0]
-    solution, t_solved, stimulus = pulse(ode_3d, 'i_app', pattern, end_time, ic)
 
+    """Solve 3d model for above parameters and compute frequency"""
+    solution, t_solved, stimulus = pulse(ode_3d, 'i_app', pattern, end_time, ic)
     spike_time, instantaneous_frequency = __compute_instantaneous_frequency__(solution[:, 0], t_solved)
 
-    # we want the spikes from the second half. Since the for loop runs only twice the last state
-    # and t variables correspond to that
-
-    if fig_num == 0:  # plot voltage data
-        original_axis = plt.gca()
-        plt.plot(t_solved, solution[:, 0], 'k')
+    """Plot voltage data and add frequency axis for first panel"""
+    if ix == 0:
+        v = solution[:, 0]
+        plt.plot(t_solved, v, 'k')
         plt.plot(t_solved, 10 * stimulus - 80, 'grey')
-
-        ax2 = original_axis.twinx()  # second axis to plot the "inset frequency"
-        ax2.plot(spike_time, instantaneous_frequency, 'ko', markersize=1)
-        ax2.set_ylim([1, 10])  # gives nice scaling
-        ax2.set_yticks([7, 9])
-        ax2.set_ylabel('Frequency (Hz)')
-
-        plt.sca(original_axis)  # return plt.* command to the original axis
+        __plot_secondary_frequency__(spike_time, instantaneous_frequency)
 
         set_properties(title, y_label='v (mV)', y_tick=[-60, -40, -20, 0, 20], x_tick=[0, 3000, 6000], x_ticklabel=[],
                        x_limits=[0, 6000])
+    else:
+        h, hs = solution[:, 1], solution[:, 2]
+        plt.plot(t_solved, h * hs, 'k')
+        plt.plot(t_solved, hs, "k--")
 
-    else:  # plot h data
-        plt.plot(t_solved, (solution[:, 1]) * (solution[:, 2]), 'k')
-        plt.plot(t_solved, solution[:, 2], "k--")
         set_properties(title, x_label='time (ms)', y_label='h$_{total}$, h$_s$', y_tick=[0, 0.2, 0.4, 0.6, 0.8],
                        x_tick=[0, 3000, 6000], x_limits=[0, 6000])
+        make_legend(["h$_{total}$", "h$_s$"], loc='upper right')
 
 
 def __compute_instantaneous_frequency__(voltage, time, threshold=-40):
@@ -89,52 +105,60 @@ def __compute_instantaneous_frequency__(voltage, time, threshold=-40):
     :return: Spike times and frequency
     """
 
-    spike_index = argrelmax(voltage)[0]  # returns ([peaks]) so extract array
-    spike_index = spike_index[voltage[spike_index] > threshold]  # filter out spikelets if any?
+    """Find peaks and filter spikelets if any"""
+    spike_index = argrelmax(voltage)[0]
+    spike_index = spike_index[voltage[spike_index] > threshold]
+
+    """Compute frequency as 1/isi"""
     instantaneous_frequency = 1 / np.diff(time[spike_index])
 
-    spike_times = time[spike_index[1:]]  # drop first spike time since its used to compute diff
-    return spike_times, 1000 * instantaneous_frequency  # convert frequency to Hz
+    """Drop first spike times (isi has 1 less point) and return frequency in Hz (period is in ms)"""
+    return time[spike_index[1:]], 1000 * instantaneous_frequency
 
 
 def __figure3b__(title, ix=0):
     """
-    Nullcline analysis of different regimes in depolarization block
+    Plot nullclines for different model regimes in different panels for 3B
+
 
     :param title: Plot title (panel label)
     :param ix: Which plot to make ix referes to the index if the below i_app_list and hs_list
     :return: None
     """
 
-    v = np.arange(-90, 50)
-    i_app = [0, 0.16, 0.16, 0.16][ix]  # different panels (ix) use a different i_app: set the appropriate one
-    hs = [0.6, 0.6, 0.2, 0.05][ix]  # different panels (ix) use a different hs: set the appropriate one
+    """Compute isi for voltage between -90 and 50"""
+    voltage = np.arange(-90, 50)
 
-    nullcline_figure(v, i_app, stability=ix == 3, hs=hs)
+    """different panels (ix) use a different parameters: set the appropriate one"""
+    i_app = [0, 0.16, 0.16, 0.16][ix]
+    hs = [0.6, 0.6, 0.2, 0.05][ix]
+    nullcline_figure(voltage, i_app, stability=ix == 3, hs=hs)
 
-    y_label = ""
-    y_ticklabel = []
-    if ix == 0:
-        y_label = "h"
-        y_ticklabel = None
+    y_label = "h" if ix == 0 else ""
+    y_ticklabel = None if ix == 0 else []
+
     set_properties(title, y_label=y_label, x_tick=[-40, 40], y_tick=[0, 0.2, 0.4, 0.6, 0.8],
                    x_limits=(-80, 50), y_limits=(0, 0.6), y_ticklabel=y_ticklabel, x_label='V (mV)')
 
 
 def __figure3c__(title):
     """
-    Bifurcation analysis
+    Perform bifurcation analysis of 3D system for 3C
 
     :param title: Plot title (panel label)
     :return: None
     """
 
-    __figure3c_continuation__()  # also makes the plot
+    """Compute contunuation and plot bifurcation diagram"""
+    __figure3c_continuation__()
+
+    """Set parameters for crashing trajectory"""
     parameters = default_parameters(i_app=0.16)
     t = np.arange(0, 10000, 0.1)
     ic = [-60, 0, 1]
 
-    trajectory = odeint(ode_3d, ic, t, args=(parameters,))  # solve system and overlay - zorder ensures in background
+    """solve system and overlay - zorder plotting behind bifuraction diagram"""
+    trajectory = odeint(ode_3d, ic, t, args=(parameters,))
     plt.plot(trajectory[:, 2], trajectory[:, 0], c='grey', zorder=-1e5, linewidth=0.5)  # draw trajectory below bifn
 
     set_properties(title, y_label="v (mV)", x_limits=[0, 1], x_tick=[0, 0.5, 1], y_tick=[-80, -40, 0, 40], x_label='hs')
@@ -144,17 +168,20 @@ def __figure3c_continuation__():
     """
     Actual continuation analysis for 3C. Contains commands to pyDSTool. Performs some formatting and continuation
 
+    Plotting commands are contained with continuation commands to keep pycont objects together
+
     :return: None
     """
 
+    """Set parameters and convert to symbolic representation"""
     parameters = default_parameters(i_app=0.16)
     v, h, h_s = symbols('v h h_s')
-    dydt = hs_clamp([v, h, h_s], 0, parameters)  # create a symbolic version of the ode
+    dydt = hs_clamp([v, h, h_s], 0, parameters)  # returns a symbolic expression since variables are symbolic
 
     DSargs_3 = PyDSTool.args(name='bifn_3')
     DSargs_3.pars = {'h_s': 0}
     DSargs_3.varspecs = {'v': PyDSTool.convertPowers(str(dydt[0])),
-                         'h': PyDSTool.convertPowers(str(dydt[1]))}
+                         'h': PyDSTool.convertPowers(str(dydt[1]))}  # convert **2 to ^2
     DSargs_3.ics = {'v': 0, 'h': 0}
 
     ode_3 = PyDSTool.Generator.Vode_ODEsystem(DSargs_3)
@@ -199,20 +226,21 @@ def __figure3c_continuation__():
 
 def __figure3d__(title):
     """
-    Model response with faster hs rate
+    Explore 3D model response to a faster hs rate for figure 3D
 
     :param title: Plot title (panel label)
     :return: None
     """
 
-    pattern = {0: 0, 2000: 0.16}  # set i_app=0 at t=0. Change to i_app=0.16 at t=2000
+    """Compute a 10000ms simulation with i_app=0 at t=0 and then i_app=0.16 at t=2000"""
+    pattern = {0: 0, 2000: 0.16}
     end_time = 10000
     ic = [-65, 1, 1]
 
-    # need lambda function to set additional scale flag
-    solution, t_solved, stimulus = pulse(lambda s, t, p: ode_3d(s, t, p, scale=2), 'i_app', pattern, end_time, ic)
+    """Create curried function with partial to hide the scale kwargs"""
+    solution, t_solved, stimulus = pulse(partial(ode_3d, scale=2), 'i_app', pattern, end_time, ic)
 
     plt.plot(t_solved, solution[:, 0], 'k')
-    plt.plot(t_solved, 10 * stimulus - 80, 'grey')
+    plt.plot(t_solved, 30 * stimulus - 80, 'grey')
     set_properties(title, y_label='$v_m$ (mV)', y_tick=[-60, -40, -20, 0, 20], y_limits=(-80, 20), x_label='t (ms)',
                    x_tick=[0, 5000, 10000], x_limits=(0, 10000))
