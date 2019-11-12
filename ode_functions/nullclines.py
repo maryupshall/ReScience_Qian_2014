@@ -8,21 +8,18 @@ from ode_functions.diff_eq import h_inf, f, m_inf, default_parameters
 
 
 def nullcline_h(v):
-    """
-    h nullcline
+    """h nullcline
 
     Simply a call to h_inf as they're the same. This function provides a similar naming as to nullcline_v
 
     :param v: Membrane potential
     :return: h nullcline
     """
-
     return h_inf(v)
 
 
 def nullcline_v(v, i_app, hs=1):
-    """
-    Compute the v nullcline
+    """Compute the v nullcline
 
     Computes the v nullcline for all values of v specified via newton's method
 
@@ -31,11 +28,10 @@ def nullcline_v(v, i_app, hs=1):
     :param hs: hs variable
     :return: v nullcline
     """
-
     nullcline = np.zeros((len(v),))
     parameters = default_parameters(i_app=i_app)
 
-    """Find self-consistent h value for every v on the nullcline"""
+    # Find self-consistent h value for every v on the nullcline
     for ix, _ in enumerate(v):
         solvable_nullcline = partial(
             __nullcline_v_implicit__, v[ix], parameters, hs
@@ -46,8 +42,7 @@ def nullcline_v(v, i_app, hs=1):
 
 
 def intersect(fa, fb):
-    """
-    Compute intersection between 2 curves lazily (where the two functions are closest).
+    """Compute intersection between 2 curves lazily (where the two functions are closest).
 
     This is a helper function for plotting intersections of nullclines. This is not a true intersection
 
@@ -55,13 +50,11 @@ def intersect(fa, fb):
     :param fb: Numeric values for function b
     :return: Intersection index
     """
-
     return np.argmin(np.abs(fa - fb))
 
 
 def __nullcline_v_implicit__(v, parameters, hs, h):
-    """
-    Implicit form of the v nullcline evaluated at h, v, and hs
+    """Implicit form of the v nullcline evaluated at h, v, and hs
 
     :param v: Membrane potential
     :param h: h gating variable
@@ -69,7 +62,6 @@ def __nullcline_v_implicit__(v, parameters, hs, h):
     :param parameters: Parameters
     :return: v nullcline in implicit form
     """
-
     i_app = parameters["i_app"]
     g_na = parameters["g_na"]
     g_k = parameters["g_k"]
@@ -87,8 +79,7 @@ def __nullcline_v_implicit__(v, parameters, hs, h):
 
 
 def nullcline_figure(v, i_app, stability, hs=1, h_color="black", v_color="grey"):
-    """
-    Helper function for creating nullcline figure
+    """Helper function for creating nullcline figure
 
     :param v: Set of voltages to create nullcline for
     :param i_app: Injected current
@@ -98,18 +89,17 @@ def nullcline_figure(v, i_app, stability, hs=1, h_color="black", v_color="grey")
     :param v_color: Optional color for the v_nullcline color: defaults to grey
     :return: None
     """
-
-    """Extract and plot the h nullcline"""
+    # Extract and plot the h nullcline
     nh = nullcline_h(v)
     plt.plot(
         v, nh, h_color, zorder=-1000
     )  # large negative zorder forces plotting on bottom
 
-    """Extract and plot the v nullcline"""
+    # Extract and plot the v nullcline
     nv = nullcline_v(v, i_app, hs=hs)
     plt.plot(v, nv, v_color)
 
-    """Lazily compute intersection and plot the stability (where closest only: not true intersection) """
+    # Lazily compute intersection and plot the stability (where closest only: not true intersection)
     cross_index = intersect(nh, nv)
     style = "k" if stability else "none"
     plt.scatter(

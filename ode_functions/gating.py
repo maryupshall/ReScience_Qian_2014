@@ -2,8 +2,7 @@ import numpy as np
 
 
 def x_inf(v, x_half, x_slope, exp=np.exp):
-    """
-    Steady-state activation for variable
+    """Steady-state activation for variable
 
     :param v: Membrane potential
     :param x_half: Half max voltage
@@ -11,75 +10,64 @@ def x_inf(v, x_half, x_slope, exp=np.exp):
     :param exp: Function to call for exponential: should be overridden for symbolic exponential (sympy.exp)
     :return: x_inf(v)
     """
-
     return 1 / (1 + exp(-(v - x_half) / x_slope))
 
 
 def m_inf(v, exp=np.exp):
-    """
-    Steady-state activation variable for m
+    """Steady-state activation variable for m
 
     :param v: Membrane potential
     :param exp: Exponential function to use
     :return: m_inf(v)
     """
-
     m_half = -30.0907
     m_slope = 9.7264
     return x_inf(v, m_half, m_slope, exp=exp)
 
 
 def h_inf(v, exp=np.exp):
-    """
-    Steady-state activation variable for h
+    """Steady-state activation variable for h
 
     :param v: Membrane potential
     :param exp: Exponential function to use
     :return: h_inf(v)
     """
-
     h_half = -54.0289
     h_slope = -10.7665
     return x_inf(v, h_half, h_slope, exp=exp)
 
 
 def hs_inf(v, exp=np.exp):
-    """
-    Steady-state activation variable for hs
+    """Steady-state activation variable for hs
 
     :param v: Membrane potential
     :param exp: Exponential function to use
     :return: hs_inf(v)
     """
-
     hs_half = -54.8
     hs_slope = -1.57
     return x_inf(v, hs_half, hs_slope, exp=exp)
 
 
 def n_inf(v, exp=np.exp):
-    """
-    Steady-state activation variable for n
+    """Steady-state activation variable for n
 
     :param v: Membrane potential
     :param exp: Exponential function to use
     :return: hs_inf(v)
     """
-
     n_half = -25
     n_slope = 12
     return x_inf(v, n_half, n_slope, exp=exp)
 
 
 def tau_h(v, exp=np.exp):
-    """
-    Time constant (\tau) for variable h
+    """Time constant (\tau) for variable h
 
     :param v: Membrane potential
     :param exp: Exponential function to use
     :return: tau_h(v)
     """
-
     a = 0.00050754 * exp(-0.063213 * v)
     b = 9.7529 * exp(0.13442 * v)
 
@@ -87,26 +75,22 @@ def tau_h(v, exp=np.exp):
 
 
 def tau_hs(v, exp=np.exp):
-    """
-    Time constant (\tau) for variable hs
+    """Time constant (\tau) for variable hs
 
     :param v: Membrane potential
     :param exp: Exponential function to use
     :return: tau_hs(v)
     """
-
     return 20 + 160 / (1 + exp((v + 47.2) / 1))
 
 
 def tau_m(v, exp=np.exp):
-    """
-    Time constant (\tau) for variable m
+    """Time constant (\tau) for variable m
 
     :param v: Membrane potential
     :param exp: Exponential function to use
     :return: tau_m(v)
     """
-
     a = -(15.6504 + (0.4043 * v)) / (exp(-19.565 - (0.50542 * v)) - 1)
     b = 3.0212 * exp(-0.0074630 * v)
 
@@ -114,26 +98,22 @@ def tau_m(v, exp=np.exp):
 
 
 def tau_n(v, exp=np.exp, shift=60):
-    """
-    Time constant (\tau) for variable n
+    """Time constant (\tau) for variable n
 
     :param v: Membrane potential
     :param exp: Exponential function to use
     :param shift: Shift in the gating potential to highlight error in original paper: Original=40, we use 60
     :return: tau_n(v)
     """
-
     return 1 + 19 * exp((-((np.log(1 + 0.05 * (v + shift)) / 0.05) ** 2)) / 300)
 
 
-def f(h):
-    """
-    f(h) is a dimension reduction where n is represented as a function f(h)
+def f(h):  # todo rename
+    """f(h) is a dimension reduction where n is represented as a function f(h)
 
     :param h: Gating variable h
     :return: f(h)
     """
-
     a0 = 0.8158
     a1 = -3.8768
     a2 = 6.8838

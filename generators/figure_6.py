@@ -8,20 +8,18 @@ from plotting import *
 
 
 def run():
-    """
-    Top level runner for figure 6
+    """Top level runner for figure 6
     :return: None
     """
-
     print("Running: Figure 6")
 
     init_figure(size=(6, 6))
-    __figure6__()
+    figure6()
 
     save_fig("6")
 
 
-def __figure6__(ampa_scale=1 / 1000, nmda_scale=1 / 27200):
+def figure6(ampa_scale=1 / 1000, nmda_scale=1 / 27200):  # todo refactor
     channel_types = {"nmda": nmda_current, "ampa": ampa_current, "i_app": None}
 
     # parameters for each channel. There are two sets of parameters for the 2 regimes
@@ -37,7 +35,7 @@ def __figure6__(ampa_scale=1 / 1000, nmda_scale=1 / 27200):
         "i_app": [0, 0.32, 0],
     }
 
-    """ iterate over fig a/b parameter sets"""
+    # iterate over fig a/b parameter sets
     for iz, parameter_sets in enumerate(
         [parameters_left_figures, parameters_right_figures]
     ):

@@ -5,44 +5,40 @@ from plotting import *
 
 
 def run():
-    """
-    Top level runner for figure 2
+    """Top level runner for figure 2
     :return: None
     """
-
     print("Running: Figure 2")
 
     init_figure(size=(5, 3))
     plt.subplot2grid((2, 2), (0, 0), colspan=2, rowspan=1)
-    __figure2a__("A")
+    figure2a("A")
 
     for ix, col in enumerate([0, 1]):
         plt.subplot2grid((2, 2), (1, col), colspan=1, rowspan=1)
-        __figure2b__("B" + str(ix + 1), panel=ix)
+        figure2b("B" + str(ix + 1), panel=ix)
 
     save_fig("2")
 
 
-def __figure2a__(title):
-    """
-    Compute 2d model response to step current input for figure 2A
+def figure2a(title):
+    """Compute 2d model response to step current input for figure 2A
 
     :param title: Plot title (panel label)
     :return: None
     """
-
-    """Compute a 3000ms simulation with i_app=0 at t=0 and then i_app=3.5 at t=2000"""
+    # Compute a 3000ms simulation with i_app=0 at t=0 and then i_app=3.5 at t=2000
     pattern = {0: 0, 2000: 3.5}
     end_time = 3000
     initial_condition = [-35, 1]
 
-    """Solve ode_2d for a current pulse with above parameters"""
+    # Solve ode_2d for a current pulse with above parameters
     solution, t_solved, stimulus = pulse(
         ode_2d, "i_app", pattern, end_time, initial_condition
     )
     v = solution[:, 0]
 
-    """Annotate depolarization block potential"""
+    # Annotate depolarization block potential
     block_potential = v[
         -1
     ]  # since the model remains in depolarization block the last time step is sufficient
@@ -64,9 +60,8 @@ def __figure2a__(title):
     )
 
 
-def __figure2b__(title, panel=0):
-    """
-    Plot nullclines for different model regimes in different panels for 2B
+def figure2b(title, panel=0):
+    """Plot nullclines for different model regimes in different panels for 2B
 
     Model regimes are taken from before depolarization block and after
 
@@ -75,12 +70,14 @@ def __figure2b__(title, panel=0):
     :return: None
     """
 
-    """Select appropriate current regime depending on panel"""
+    # Select appropriate current regime depending on panel
     i_app = [0, 3.5][panel]
     voltage = np.arange(-90, 50, 1)
 
-    """Compute nullcline and set the stability"""
-    nullcline_figure(voltage, i_app, stability=panel == 1)  # 2nd panel is stable
+    # Compute nullcline and set the stability
+    nullcline_figure(
+        voltage, i_app, stability=panel == 1
+    )  # panel==1 means 2nd panel is stable
 
     y_label = "h" if panel == 0 else ""
     y_ticklabel = None if panel == 0 else []  # todo clean non for default
