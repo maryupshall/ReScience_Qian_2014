@@ -95,7 +95,7 @@ def __figure6__(ampa_scale=1 / 1000, nmda_scale=1 / 27200):
             x_ticklabel = []
             if (2 * ix + iz + 1) == 5 or (2 * ix + iz + 1) == 6:
                 plt.plot(t_solved, 10 * stimulus - 80, "grey")
-                x_label = "t (ms)"
+                x_label = "Time (ms)"
                 x_ticklabel = None
 
             set_properties(

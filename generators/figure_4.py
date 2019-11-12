@@ -62,7 +62,7 @@ def __figure4a__(title, panel=0):
     if panel == 0:
         set_properties(
             title,
-            x_label="v (mV)",
+            x_label="V (mV)",
             y_label="h",
             x_tick=[-40, 0],
             y_tick=[0, 0.05, 0.1, 0.15],
@@ -72,7 +72,7 @@ def __figure4a__(title, panel=0):
     else:
         set_properties(
             title,
-            x_label="v (mV)",
+            x_label="V (mV)",
             x_tick=[-60, 20],
             y_tick=[0, 0.2, 0.4],
             x_limits=(-80, 20),
@@ -101,7 +101,7 @@ def __figure4b__(title, panel=0):
 
     set_properties(
         title,
-        y_label="$V_m$ (mV)",
+        y_label="V(mV)",
         y_tick=[-80, 0, 30],
         x_label=x_label,
         x_tick=x_tick,
@@ -265,7 +265,7 @@ def __figure4c__(title, panel=0):  # todo slightly different
     if panel == 0:
         set_properties(
             title,
-            x_label="Voltage (mV)",
+            x_label="V (mV)",
             y_label="I$_{stim}$($\mu$A/cm$^2$)",
             x_tick=[-80, -40],
             y_tick=[-5, 0, 5],
@@ -275,7 +275,7 @@ def __figure4c__(title, panel=0):  # todo slightly different
     else:
         set_properties(
             title,
-            x_label="Voltage (mV)",
+            x_label="V (mV)",
             x_tick=[-70, -60, -50],
             y_tick=[-0.1, 0, 0.1, 0.2],
             x_limits=(-70, -50),

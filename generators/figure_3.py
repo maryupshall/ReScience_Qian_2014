@@ -87,7 +87,7 @@ def __figure3a__(title, ix=0):
 
         set_properties(
             title,
-            y_label="v (mV)",
+            y_label="V (mV)",
             y_tick=[-60, -40, -20, 0, 20],
             x_tick=[0, 3000, 6000],
             x_ticklabel=[],
@@ -100,13 +100,13 @@ def __figure3a__(title, ix=0):
 
         set_properties(
             title,
-            x_label="time (ms)",
+            x_label="Time (ms)",
             y_label="h$_{total}$, h$_s$",
             y_tick=[0, 0.2, 0.4, 0.6, 0.8],
             x_tick=[0, 3000, 6000],
             x_limits=[0, 6000],
         )
-        make_legend(["h$_{total}$", "h$_s$"], loc="upper right")
+        plt.legend(["h$_{total}$", "h$_s$"], loc="upper right")
 
 
 def __compute_instantaneous_frequency__(voltage, time, threshold=-40):
@@ -186,7 +186,7 @@ def __figure3c__(title):
 
     set_properties(
         title,
-        y_label="v (mV)",
+        y_label="V (mV)",
         x_limits=[0, 1],
         x_tick=[0, 0.5, 1],
         y_tick=[-80, -40, 0, 40],
@@ -284,10 +284,10 @@ def __figure3d__(title):
     plt.plot(t_solved, 30 * stimulus - 80, "grey")
     set_properties(
         title,
-        y_label="$v_m$ (mV)",
+        y_label="V (mV)",
         y_tick=[-60, -40, -20, 0, 20],
         y_limits=(-80, 20),
-        x_label="t (ms)",
+        x_label="Time (ms)",
         x_tick=[0, 5000, 10000],
         x_limits=(0, 10000),
     )

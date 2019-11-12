@@ -17,10 +17,6 @@ def save_fig(name, extension="pdf", figure_path="figures", figure_prefix="figure
     plt.close("all")
 
 
-def make_legend(legend, **kwargs):
-    plt.legend(legend, fontsize=8, **kwargs)
-
-
 def set_properties(
     title,
     x_label="",
@@ -32,14 +28,11 @@ def set_properties(
     y_ticklabel=None,
     x_ticklabel=None,
 ):
-    plot_label_size = 12
-    tick_label_size = 10
-
-    plt.xlabel(x_label, size=plot_label_size)
+    plt.xlabel(x_label)
     if x_ticklabel is not None:
         plt.gca().set_xticklabels(x_ticklabel)
 
-    plt.ylabel(y_label, size=plot_label_size)
+    plt.ylabel(y_label)
     if y_ticklabel is not None:
         plt.gca().set_yticklabels(y_ticklabel)
 
@@ -48,8 +41,8 @@ def set_properties(
     if y_tick is None:
         y_tick = []
 
-    plt.xticks(x_tick, size=tick_label_size)
-    plt.yticks(y_tick, size=tick_label_size)
+    plt.xticks(x_tick)
+    plt.yticks(y_tick)
 
     plt.xlim(x_limits)
     plt.ylim(y_limits)

@@ -77,7 +77,7 @@ def __figure1_supplemental_files__():
     If we use the original equation for tau_n (with the shift being 40mV) then we see a very distorted limit cycle in 
     the n,h phase space
     """
-    __figure1c__("Supplemental 1C", use_modified_tau_n=True)
+    __figure1c__("Supplemental 1C", use_modified_tau_n=False)
     save_fig("supp_1C")
 
     """
@@ -85,9 +85,7 @@ def __figure1_supplemental_files__():
     Incidentally this looks more like the GABA neuron in their cited Seutin and Engel paper (2010) with a rounded trough
     see figure 7B
     """
-    __figure1d__(
-        "Supplemental 1D2", panel=1, use_modified_tau_n=True
-    )  # ix=1 means use 5D model
+    __figure1d__("Supplemental 1D2", panel=1, use_modified_tau_n=False)
     save_fig("supp_1D2")
 
 
@@ -130,11 +128,11 @@ def __figure1a__(title, g_na=5.92 * 0.514, v_reset=-120):
         )
         plt.plot(voltage, current, color=color, linestyle=linestyle)
 
-    make_legend(["3D", "2D"], loc="center left", bbox_to_anchor=(0.3, 1.05))
+    plt.legend(["3D", "2D"], loc="center left", bbox_to_anchor=(0.3, 1.05))
     set_properties(
         title,
         x_label="V (mV)",
-        y_label="peak I$_{Na}$($\mu$A/cm$^2$)",
+        y_label="I$_{Na}$($\mu$A/cm$^2$)",
         x_tick=[-80, -40, 0, 40],
         y_tick=[-160, 0],
     )
@@ -209,8 +207,8 @@ def __figure1b__(title, g_na=5.92, pulse_width=5):  # todo clean up
     plt.plot(time, i_na, "k")
     set_properties(
         title,
-        x_label="time (ms)",
-        y_label="I$_{Na}$ (pA)",
+        x_label="Time (ms)",
+        y_label="",  # this is actually uA/cm^2 todo discuss in paper
         x_tick=[0, 200, 400],
         y_tick=[-250, -200, 0],
         x_limits=[-50, 450],
@@ -263,7 +261,7 @@ def __figure1c__(title, use_modified_tau_n=True):
     plt.plot(h, n, c="grey")
     plt.plot(h, f(h), "k")  # todo rename f
 
-    make_legend(["n", "n=f(h)"], loc="center left", bbox_to_anchor=(0.3, 1.05))
+    plt.legend(["n", "n=f(h)"], loc="center left", bbox_to_anchor=(0.3, 1.05))
     set_properties(
         title,
         x_label="h",
@@ -324,7 +322,7 @@ def __figure1d__(title, panel=0, use_modified_tau_n=True):
 
     set_properties(
         title,
-        x_label="time (ms)",
+        x_label="Time (ms)",
         y_label=y_label,
         y_tick=[-80, -40, 0],
         y_limits=[-80, 20],
