@@ -225,7 +225,7 @@ def pulse_ode_call(model_function, ic, t, parameter_name, value, model_parameter
 
 
 def pulse(
-    function, parameter, pattern: dict, end_time, ic, **kwargs
+    model, parameter_name, temporal_pattern: dict, t_max, ic, **kwargs
 ):  # todo refactor for clamp
     """Apply a time dependent "pulse" to an ODE system.
 
@@ -233,10 +233,10 @@ def pulse(
     stitched together with the IC of the next step being the end point of the current step
 
     For example injecting a dc-current at t=1000
-    :param function: ODE function to apply pulse to
-    :param parameter: Parameter to
-    :param pattern: A dictionary of time:value pairs {0: 0, 1000:1} will set the parameter to 0 at t=0 and 1 and t=1000
-    :param end_time: Time to end the simulation at
+    :param model: ODE function to apply pulse to
+    :param parameter_name: Parameter to
+    :param temporal_pattern: A dictionary of time:value pairs {0: 0, 1000:1} will set the parameter to 0 at t=0 and 1 and t=1000
+    :param t_max: Time to end the simulation at
     :param ic: Simulation initial condition
     :param kwargs: Additional parameters to set for default parameters (?)
     :return: The solved continuous ode, the time points and the waveform of the property
@@ -246,12 +246,12 @@ def pulse(
     t_solved = np.array([])
     stimulus = np.array([])
 
-    sequence = pattern_to_window_and_value(pattern, end_time)
+    sequence = pattern_to_window_and_value(temporal_pattern, t_max)
     # iterate over the time windows and set the parameter to value during the window
     for (t0, t1), value in sequence:
         parameters = default_parameters(**kwargs)
         parameters[
-            parameter
+            parameter_name
         ] = value  # set target parameter, this will also add the clamp_function but it wont be used
 
         #  generate new time steps and save
@@ -259,7 +259,7 @@ def pulse(
         t_solved = np.concatenate((t_solved, t))
 
         # Call ode and get model solution update
-        block_solution = pulse_ode_call(function, ic, t, parameter, value, parameters)
+        block_solution = pulse_ode_call(model, ic, t, parameter_name, value, parameters)
 
         # Save solution and stimulus wave form and update ic for next window
         solution = np.vstack((solution, block_solution))  # keep track of solution
@@ -288,9 +288,27 @@ def compute_iv_current(solution, parameters, follow):
         return i_na[pk]
 
 
-def current_voltage_curve(
-    ode_function, clamp_voltage, time, ic, follow=False, **kwargs
-):
+def solve_ode(model, ic, t_max, dt=0.1, rtol=None, **kwargs):
+    """Solve an ode model with settings
+
+    :param model: ODE Model to solve
+    :param ic: Initial conditions
+    :param t_max: Simulation end time
+    :param dt: Time step to save at (defaults to 0.1ms)
+    :param rtol: Relative tolerance (defaults to none)
+    :param kwargs: Optional arguments to set parameters
+    :return: t, and solution
+    """
+    # Initialize time and paraters
+    parameters = default_parameters(**kwargs)
+    t = np.arange(0, t_max, dt)
+
+    # Solve and return solution
+    solution = odeint(model, ic, t, args=(parameters,), rtol=rtol)
+    return t, solution
+
+
+def current_voltage_curve(model, clamp_range, t_max, ic, follow=False, **kwargs):
     """Compute IV curve in either follow mode or peak mode
 
     In follow mode a traditional IV curve is computed where the I(V) is the steady state current at a clamped voltage
@@ -299,9 +317,9 @@ def current_voltage_curve(
     In peak mode (follow = False) the voltage is held at some reset voltage. The voltage is the clamped at the voltage
     for the IV curve and the peak (transient) current is used
 
-    :param ode_function: The function to call for voltage_clamp (the model used)
-    :param clamp_voltage: Voltages to clamp during the IV curve
-    :param time: Time steps to solve the ode
+    :param model: The function to call for voltage_clamp (the model used)
+    :param clamp_range: Upper and lower range of voltage to clamp during the IV curve
+    :param t_max: Time to run clamp for to equilibrate
     :param ic: Initial condition or reset condition
     :param follow: Optional flag is follow model or peak mode is used: defaults to peak mode, follow=False
     :param kwargs: Optional settings for the parameters such as g_na or i_leak
@@ -309,16 +327,18 @@ def current_voltage_curve(
     """
     # Initialize IV curve
     parameters = default_parameters(**kwargs)
-    current = np.zeros(clamp_voltage.shape)
+    voltage = np.arange(*clamp_range)
+    current = np.zeros(voltage.shape)
     state = np.array([ic])  # inital state is ic; array([ic]) gives a 2d array
+    time_points = np.arange(0, t_max)
 
     # Update model inital state according to IV curve type, run voltage clamp and save I(V)
-    for ix, v in enumerate(clamp_voltage):
+    for ix, v in enumerate(voltage):
         ic = update_ic(v, ic, state, follow)
-        state = odeint(voltage_clamp, ic, time, args=(parameters, ode_function))
+        state = odeint(voltage_clamp, ic, time_points, args=(parameters, model))
         current[ix] = compute_iv_current(state, parameters, follow)
 
-    return current
+    return current, voltage
 
 
 def update_ic(v, ic, state, follow):
@@ -341,7 +361,7 @@ def update_ic(v, ic, state, follow):
         return np.concatenate([[v], ic[1:]])  # ic = [set voltage, ss of holding]
 
 
-def clamp_steady_state(v_clamp):
+def steady_state_when_clamped(v_clamp):
     """Determine the steady-state of ode_3d when clamped to a voltage
 
     :param v_clamp: Voltage to clamp to
@@ -351,3 +371,31 @@ def clamp_steady_state(v_clamp):
         voltage_clamp, [v_clamp, 1, 1], [0, 500], args=(default_parameters(), ode_3d)
     )
     return state[-1, :]
+
+
+def resize_initial_condition(ic, model, fill=1):
+    """Correct the dimension of an initial condition
+
+    Given a potentially valid initial condition (correct number of dimensions) either cut off the excess dimensions or
+    append `fill` n times to fill the inital conditions to the correct size
+
+    :param ic: Initial condition list
+    :param model: Model to be solved
+    :param fill: How to fill ic if ic is to small
+    :return: Appropriately sized ic
+    """
+    # Determine correct ic size
+    if model == ode_3d:
+        target_ic_length = 3
+    elif model == ode_2d:
+        target_ic_length = 2
+    else:
+        target_ic_length = 5
+
+    actual_ic_length = len(ic)
+    # trim ic if too large
+    if actual_ic_length >= target_ic_length:
+        return ic[:target_ic_length]
+    else:
+        # fill ic if too large
+        return ic + (target_ic_length - actual_ic_length) * [fill]

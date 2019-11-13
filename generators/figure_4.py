@@ -1,4 +1,6 @@
 import PyDSTool
+import matplotlib.pyplot as plt
+import numpy as np
 from sympy import *
 
 from ode_functions.diff_eq import (
@@ -6,10 +8,10 @@ from ode_functions.diff_eq import (
     ode_3d,
     default_parameters,
     current_voltage_curve,
+    resize_initial_condition,
 )
-from ode_functions.gating import *
 from ode_functions.nullclines import nullcline_figure
-from plotting import *
+from plotting import init_figure, save_fig, set_properties
 
 
 def run():
@@ -41,8 +43,6 @@ def figure4a(title, panel=0):
     :param panel: Which plot to make ix refers to the index if the below i_app_list and hs_list
     :return: None
     """
-    v = np.arange(-90, 50)
-
     # Select appropriate i_app and hs for the panel used
     i_app_list = [[0, 3.5], [0.16, 0.16, 0.16]][panel]
     hs_list = [[1, 1], [0.6, 0.2, 0.05]][panel]
@@ -53,10 +53,15 @@ def figure4a(title, panel=0):
     # Iterate over the different v nullclines from the different i_app and hs values
     for iy, (i_app, hs) in enumerate(zip(i_app_list, hs_list)):
         nullcline_figure(
-            v, i_app, stability=stability[panel][iy], hs=hs, h_color="g", v_color="r"
+            v_range=[-90, 50],
+            i_app=i_app,
+            stability=stability[panel][iy],
+            hs=hs,
+            color_h="g",
+            color_v="r",
         )
 
-    if panel == 0:
+    if panel == 0:  # todo rethink how we do this
         set_properties(
             title,
             x_label="V (mV)",
@@ -236,21 +241,20 @@ def figure4c(title, panel=0):  # todo slightly different
     # Select appropriate model given
     model = [ode_2d, ode_3d][panel]
 
-    # Solve IV curve for voltage between -100 and 20 using 3000ms to ensure equilibrium is reached
-    voltage = np.arange(-100, 20)
-    time = np.arange(0, 3000)
+    # Set IC
+    ic = [-100, 1]
+    ic = resize_initial_condition(ic, model, fill=1)
 
-    ic = [-100, 1]  # at such hyperpolarized parameters h and hs are ~1
-    # Add dimension to 3d model
-    if model == ode_3d:
-        ic += [1]
+    # Compute IV curve
+    current, voltage = current_voltage_curve(
+        model=model, clamp_range=[-100, 20], t_max=3000, ic=ic, follow=True
+    )
 
-    current = current_voltage_curve(model, voltage, time, ic, follow=True)
-
+    # plot IV curve
     plt.plot(voltage, current, "k")
     plt.plot(voltage, np.zeros(np.shape(voltage)), "--", color="grey")
 
-    if panel == 0:
+    if panel == 0:  # todo this
         set_properties(
             title,
             x_label="V (mV)",

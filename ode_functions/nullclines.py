@@ -41,18 +41,6 @@ def nullcline_v(v, i_app, hs=1):
     return nullcline
 
 
-def intersect(fa, fb):
-    """Compute intersection between 2 curves lazily (where the two functions are closest).
-
-    This is a helper function for plotting intersections of nullclines. This is not a true intersection
-
-    :param fa: Numeric values for function a
-    :param fb: Numeric values for function b
-    :return: Intersection index
-    """
-    return np.argmin(np.abs(fa - fb))
-
-
 def __nullcline_v_implicit__(v, parameters, hs, h):
     """Implicit form of the v nullcline evaluated at h, v, and hs
 
@@ -78,30 +66,45 @@ def __nullcline_v_implicit__(v, parameters, hs, h):
     )
 
 
-def nullcline_figure(v, i_app, stability, hs=1, h_color="black", v_color="grey"):
+def nullcline_figure(v_range, i_app, stability, hs=1, color_h="black", color_v="grey"):
     """Helper function for creating nullcline figure
 
-    :param v: Set of voltages to create nullcline for
+    :param v_range: Min and max voltage to use
     :param i_app: Injected current
     :param stability: Whether or not the intersection is stable
     :param hs: Optional parameter for value of hs on nullcline: defaults to 1
-    :param h_color: Optional color for the h_nullcline color: defaults to black
-    :param v_color: Optional color for the v_nullcline color: defaults to grey
+    :param color_h: Optional color for the h_nullcline color: defaults to black
+    :param color_v: Optional color for the v_nullcline color: defaults to grey
     :return: None
     """
+    # Compute voltage points
+
+    v = np.arange(*v_range)
     # Extract and plot the h nullcline
     nh = nullcline_h(v)
-    plt.plot(
-        v, nh, h_color, zorder=-1000
-    )  # large negative zorder forces plotting on bottom
+    plt.plot(v, nh, color_h, zorder=-1000)
 
     # Extract and plot the v nullcline
     nv = nullcline_v(v, i_app, hs=hs)
-    plt.plot(v, nv, v_color)
+    plt.plot(v, nv, color_v)
 
     # Lazily compute intersection and plot the stability (where closest only: not true intersection)
-    cross_index = intersect(nh, nv)
+    x_i, y_i = nullcline_intersection(nh, nv, v)
     style = "k" if stability else "none"
-    plt.scatter(
-        v[cross_index], nv[cross_index], edgecolors="k", facecolor=style, zorder=1000
-    )
+    plt.scatter(x_i, y_i, edgecolors="k", facecolor=style, zorder=1000)
+
+
+def nullcline_intersection(nh, nv, v):
+    """Lazy intersection of nullclines
+
+    This is a helper function for plotting intersections of nullclines. This is not a true intersection
+
+    Intersection is defined where the difference between nh and nv is minimum
+
+    :param nh: Numeric nullcline for h
+    :param nv: Numeric nullcline for v
+    :param v: Voltage for nx(v)
+    :return: (v,nh) where the intersection occurs
+    """
+    intersection_index = np.argmin(np.abs(nh - nv))
+    return v[intersection_index], nh[intersection_index]

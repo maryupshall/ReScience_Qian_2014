@@ -1,7 +1,8 @@
+import matplotlib.pyplot as plt
+
 from ode_functions.diff_eq import ode_2d, pulse
-from ode_functions.gating import *
 from ode_functions.nullclines import nullcline_figure
-from plotting import *
+from plotting import init_figure, save_fig, set_properties
 
 
 def run():
@@ -33,15 +34,18 @@ def figure2a(title):
     initial_condition = [-35, 1]
 
     # Solve ode_2d for a current pulse with above parameters
-    solution, t_solved, stimulus = pulse(
-        ode_2d, "i_app", pattern, end_time, initial_condition
+    solution, t, waveform = pulse(
+        model=ode_2d,
+        parameter_name="i_app",
+        temporal_pattern=pattern,
+        t_max=end_time,
+        ic=initial_condition,
     )
-    v = solution[:, 0]
 
-    # Annotate depolarization block potential
-    block_potential = v[
-        -1
-    ]  # since the model remains in depolarization block the last time step is sufficient
+    # since the model remains in depolarization block the last time step is sufficient
+    v = solution[:, 0]
+    block_potential = v[-1]
+
     plt.text(
         2500,
         block_potential + 10,
@@ -49,8 +53,11 @@ def figure2a(title):
         horizontalalignment="center",
     )
 
-    plt.plot(t_solved, v, "k")
-    plt.plot(t_solved, stimulus - 70, "grey")
+    # Plot voltage trace
+    plt.plot(t, v, "k")
+    plt.plot(t, waveform - 70, "grey")
+
+    # Plot properties
     set_properties(
         title,
         y_label="V (mV)",
@@ -69,19 +76,16 @@ def figure2b(title, panel=0):
     :param panel: Which plot to make, without current (panel=0) or without current (panel=1)
     :return: None
     """
-
     # Select appropriate current regime depending on panel
     i_app = [0, 3.5][panel]
-    voltage = np.arange(-90, 50, 1)
 
     # Compute nullcline and set the stability
-    nullcline_figure(
-        voltage, i_app, stability=panel == 1
-    )  # panel==1 means 2nd panel is stable
+    s = panel == 1  # panel==1 means 2nd panel is stable
+    nullcline_figure(v_range=[-90, 50], i_app=i_app, stability=s)
 
+    # Plot Properties
     y_label = "h" if panel == 0 else ""
     y_ticklabel = None if panel == 0 else []  # todo clean non for default
-
     set_properties(
         title,
         x_label="V (mV)",
