@@ -61,7 +61,7 @@ def figure4a(title, panel=0):
             color_v="r",
         )
 
-    if panel == 0:  # todo rethink how we do this
+    if panel == 0:
         set_properties(
             title,
             x_label="V (mV)",
@@ -231,7 +231,7 @@ def figure4b2_continuation():
     plt.gca().set_title("")
 
 
-def figure4c(title, panel=0):  # todo slightly different
+def figure4c(title, panel=0):  # todo paper slightly different
     """Compute true IV curves for 2d and 3d model for figure 4C1/2
 
     :param title: Plot title (panel label)
@@ -254,7 +254,7 @@ def figure4c(title, panel=0):  # todo slightly different
     plt.plot(voltage, current, "k")
     plt.plot(voltage, np.zeros(np.shape(voltage)), "--", color="grey")
 
-    if panel == 0:  # todo this
+    if panel == 0:
         set_properties(
             title,
             x_label="V (mV)",

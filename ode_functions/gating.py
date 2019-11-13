@@ -97,18 +97,19 @@ def tau_m(v, exp=np.exp):
     return 0.01 + 1 / (a + b)
 
 
-def tau_n(v, exp=np.exp, shift=60):
+def tau_n(v, exp=np.exp, use_modified_tau_n=True):
     """Time constant (\tau) for variable n
 
     :param v: Membrane potential
     :param exp: Exponential function to use
-    :param shift: Shift in the gating potential to highlight error in original paper: Original=40, we use 60
+    :param use_modified_tau_n: Optional parameter to use the original tau_n which does not work. Defaults to our tau_n
     :return: tau_n(v)
     """
+    shift = 60 if use_modified_tau_n else 40
     return 1 + 19 * exp((-((np.log(1 + 0.05 * (v + shift)) / 0.05) ** 2)) / 300)
 
 
-def f(h):  # todo rename
+def f_approx(h):
     """f(h) is a dimension reduction where n is represented as a function f(h)
 
     :param h: Gating variable h

@@ -85,7 +85,7 @@ def figure2b(title, panel=0):
 
     # Plot Properties
     y_label = "h" if panel == 0 else ""
-    y_ticklabel = None if panel == 0 else []  # todo clean non for default
+    y_ticklabel = None if panel == 0 else []
     set_properties(
         title,
         x_label="V (mV)",

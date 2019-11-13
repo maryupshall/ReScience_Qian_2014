@@ -14,7 +14,7 @@ from ode_functions.diff_eq import (
     default_parameters,
     ode_5d,
     solve_ode,
-    f,
+    f_approx,
 )
 from plotting import init_figure, save_fig, set_properties
 
@@ -184,7 +184,7 @@ def generate_clamp_pattern_1b(t_max, pulse_width=5):
     return {k: v for k, v in zip(segment_start, voltage_sequence)}
 
 
-def figure_1b(title, g_na=5.92, pulse_width=5):  # todo clean up
+def figure_1b(title, g_na=5.92, pulse_width=5):
     """Compute the periodic step current response from figure 1B
 
     Clamp to membrane potential to -80 then depolarize and rest the membrane potential to 0mV and -70mV every 100ms with
@@ -200,9 +200,8 @@ def figure_1b(title, g_na=5.92, pulse_width=5):  # todo clean up
     """
     # Create a 500ms simulation clamped at -80 which then goes through the 1b clamp pattern
     t_max = 500
-    pre_pulse_potential = -80
     pattern = generate_clamp_pattern_1b(t_max, pulse_width=pulse_width)
-    initial_condition = steady_state_when_clamped(pre_pulse_potential)
+    initial_condition = steady_state_when_clamped(v_clamp=-80)
 
     # Impose v_clamp according to pattern
     solution, time, waveform = pulse(
@@ -215,8 +214,12 @@ def figure_1b(title, g_na=5.92, pulse_width=5):  # todo clean up
     )
 
     # Compute sodium current and plot
-    i_na = sodium_current(solution, default_parameters(g_na=g_na))
+    i_na = sodium_current(solution.T, default_parameters(g_na=g_na))
+
+    # Plot Na function
     plt.plot(time, i_na, "k")
+
+    # Plot properties
     set_properties(
         title,
         x_label="Time (ms)",
@@ -242,23 +245,19 @@ def figure_1c(title, use_modified_tau_n=True):
         0,
     ]  # Does not need to lie on limit cycle since we throw away transient
 
-    # Solve 5d model with our corrected tau_n
-    shift = 60 if use_modified_tau_n else 40  # todo make bool
-    partial_5d = partial(ode_5d, shift=shift)
+    # Solve 5d model with appropriate tau_n
+    partial_5d = partial(ode_5d, use_modified_tau_n=use_modified_tau_n)
     t, sol = solve_ode(partial_5d, initial_condition, t_max=4200, dt=0.1, rtol=1e-3)
 
     # Extract h and n and discard the first half due to transient
     ix_half_time = int(len(t) / 2)
     h = sol[ix_half_time:, 1]
     n = sol[ix_half_time:, 4]
-
-    # Perform a fit on n = f(h) # todo move to fcn
-    replicate_fit = np.poly1d(np.polyfit(h, n, deg=3))
-    print(replicate_fit)
+    fit_f_approx(h, n)
 
     # Plot limit cycle in phase plane
     plt.plot(h, n, c="grey")
-    plt.plot(h, f(h), "k")  # todo rename f
+    plt.plot(h, f_approx(h), "k")
 
     # Plot properties
     plt.legend(["n", "n=f(h)"], loc="center left", bbox_to_anchor=(0.3, 1.05))
@@ -270,6 +269,11 @@ def figure_1c(title, use_modified_tau_n=True):
         y_tick=np.arange(0, 1, 0.2),
         x_limits=[0, 0.7],
     )
+
+
+def fit_f_approx(h, n):
+    replicate_fit = np.poly1d(np.polyfit(h, n, deg=3))
+    print(replicate_fit)
 
 
 def figure1d(title, panel=0, use_modified_tau_n=True):
@@ -287,10 +291,9 @@ def figure1d(title, panel=0, use_modified_tau_n=True):
     initial_condition = [-55, 0, 0]
     initial_condition = resize_initial_condition(initial_condition, model, fill=0)
 
-    # Solve 5d model with our corrected tau_n
+    # Solve 5d model with appropriate tau_n
     if model == ode_5d:
-        shift = 60 if use_modified_tau_n else 40  # todo make bool
-        model = partial(ode_5d, shift=shift)
+        model = partial(ode_5d, use_modified_tau_n=use_modified_tau_n)
 
     t, sol = solve_ode(model, initial_condition, t_max=4200, dt=0.1, rtol=1e-3)
 

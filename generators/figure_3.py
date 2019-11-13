@@ -7,7 +7,7 @@ from scipy.integrate import odeint
 from scipy.signal import argrelmax
 from sympy import *
 
-from ode_functions.diff_eq import ode_3d, default_parameters, hs_clamp, pulse
+from ode_functions.diff_eq import ode_3d, default_parameters, hs_clamp, pulse, solve_ode
 from ode_functions.nullclines import nullcline_figure
 from plotting import init_figure, save_fig, set_properties
 
@@ -78,10 +78,9 @@ def figure3a(title, ix=0):
     t_spike, f_spike = compute_instantaneous_frequency(solution[:, 0], t_solved)
 
     # Plot voltage data and add frequency axis for first panel
-    if ix == 0:  # todo clean
-        plot_secondary_frequency(t_spike, f_spike)
-
+    if ix == 0:
         v = solution[:, 0]
+        plot_secondary_frequency(t_spike, f_spike)
         plt.plot(t_solved, v, "k")
         plt.plot(t_solved, 10 * stimulus - 80, "grey")
 
@@ -163,7 +162,7 @@ def figure3b(title, panel=0):
     )
 
 
-def figure3c(title):  # todo this
+def figure3c(title):
     """Perform bifurcation analysis of 3D system for 3C
 
     :param title: Plot title (panel label)
@@ -171,17 +170,11 @@ def figure3c(title):  # todo this
     """
     # Compute contunuation and plot bifurcation diagram
     figure3c_continuation()
-
-    # Set parameters for crashing trajectory
-    parameters = default_parameters(i_app=0.16)
-    t = np.arange(0, 10000, 0.1)
     ic = [-60, 0, 1]
 
-    # solve system and overlay - zorder plotting behind bifuraction diagram
-    trajectory = odeint(ode_3d, ic, t, args=(parameters,))
-    plt.plot(
-        trajectory[:, 2], trajectory[:, 0], c="grey", zorder=-1e5, linewidth=0.5
-    )  # draw trajectory below bifn
+    # solve system and overlay hs,v trajectory - zorder plotting behind bifuraction diagram
+    t, sol = solve_ode(model=ode_3d, ic=ic, t_max=10000, i_app=0.16)
+    plt.plot(sol[:, 2], sol[:, 0], c="grey", zorder=-1e5, linewidth=0.5)
 
     set_properties(
         title,

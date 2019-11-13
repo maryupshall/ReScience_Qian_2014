@@ -1,10 +1,10 @@
 from functools import partial
 
 import matplotlib.pyplot as plt
-import numpy as np
 from scipy.optimize import newton
 
-from ode_functions.diff_eq import h_inf, f, m_inf, default_parameters
+from ode_functions.current import total_current
+from ode_functions.diff_eq import h_inf, default_parameters
 
 
 def nullcline_h(v):
@@ -18,27 +18,136 @@ def nullcline_h(v):
     return h_inf(v)
 
 
-def nullcline_v(v, i_app, hs=1):
+def nullcline_v(voltages, i_app, hs=1):
     """Compute the v nullcline
 
     Computes the v nullcline for all values of v specified via newton's method
 
-    :param v: Membrane potential
+    :param voltages: Membrane potential
     :param i_app: Applied current
     :param hs: hs variable
     :return: v nullcline
     """
-    nullcline = np.zeros((len(v),))
+    nullcline = np.zeros((len(voltages),))
     parameters = default_parameters(i_app=i_app)
 
     # Find self-consistent h value for every v on the nullcline
-    for ix, _ in enumerate(v):
-        solvable_nullcline = partial(
-            __nullcline_v_implicit__, v[ix], parameters, hs
-        )  # make a function that takes h
-        nullcline[ix] = newton(solvable_nullcline, x0=0)
+    for ix, v in enumerate(voltages):
+        f_solve = partial(__nullcline_v_implicit__, v, parameters, hs)
+        nullcline[ix] = newton(f_solve, x0=0)
 
     return nullcline
+
+
+import numpy as np
+
+
+def x_inf(v, x_half, x_slope, exp=np.exp):
+    """Steady-state activation for variable
+
+    :param v: Membrane potential
+    :param x_half: Half max voltage
+    :param x_slope: Slope at half max
+    :param exp: Function to call for exponential: should be overridden for symbolic exponential (sympy.exp)
+    :return: x_inf(v)
+    """
+    return 1 / (1 + exp(-(v - x_half) / x_slope))
+
+
+def m_inf(v, exp=np.exp):
+    """Steady-state activation variable for m
+
+    :param v: Membrane potential
+    :param exp: Exponential function to use
+    :return: m_inf(v)
+    """
+    m_half = -30.0907
+    m_slope = 9.7264
+    return x_inf(v, m_half, m_slope, exp=exp)
+
+
+def h_inf(v, exp=np.exp):
+    """Steady-state activation variable for h
+
+    :param v: Membrane potential
+    :param exp: Exponential function to use
+    :return: h_inf(v)
+    """
+    h_half = -54.0289
+    h_slope = -10.7665
+    return x_inf(v, h_half, h_slope, exp=exp)
+
+
+def hs_inf(v, exp=np.exp):
+    """Steady-state activation variable for hs
+
+    :param v: Membrane potential
+    :param exp: Exponential function to use
+    :return: hs_inf(v)
+    """
+    hs_half = -54.8
+    hs_slope = -1.57
+    return x_inf(v, hs_half, hs_slope, exp=exp)
+
+
+def n_inf(v, exp=np.exp):
+    """Steady-state activation variable for n
+
+    :param v: Membrane potential
+    :param exp: Exponential function to use
+    :return: hs_inf(v)
+    """
+    n_half = -25
+    n_slope = 12
+    return x_inf(v, n_half, n_slope, exp=exp)
+
+
+def tau_h(v, exp=np.exp):
+    """Time constant (\tau) for variable h
+
+    :param v: Membrane potential
+    :param exp: Exponential function to use
+    :return: tau_h(v)
+    """
+    a = 0.00050754 * exp(-0.063213 * v)
+    b = 9.7529 * exp(0.13442 * v)
+
+    return 0.4 + 1 / (a + b)
+
+
+def tau_hs(v, exp=np.exp):
+    """Time constant (\tau) for variable hs
+
+    :param v: Membrane potential
+    :param exp: Exponential function to use
+    :return: tau_hs(v)
+    """
+    return 20 + 160 / (1 + exp((v + 47.2) / 1))
+
+
+def tau_m(v, exp=np.exp):
+    """Time constant (\tau) for variable m
+
+    :param v: Membrane potential
+    :param exp: Exponential function to use
+    :return: tau_m(v)
+    """
+    a = -(15.6504 + (0.4043 * v)) / (exp(-19.565 - (0.50542 * v)) - 1)
+    b = 3.0212 * exp(-0.0074630 * v)
+
+    return 0.01 + 1 / (a + b)
+
+
+def tau_n(v, exp=np.exp, use_modified_tau_n=True):
+    """Time constant (\tau) for variable n
+
+    :param v: Membrane potential
+    :param exp: Exponential function to use
+    :param use_modified_tau_n: Optional parameter to use the original tau_n which does not work. Defaults to our tau_n
+    :return: tau_n(v)
+    """
+    shift = 60 if use_modified_tau_n else 40
+    return 1 + 19 * exp((-((np.log(1 + 0.05 * (v + shift)) / 0.05) ** 2)) / 300)
 
 
 def __nullcline_v_implicit__(v, parameters, hs, h):
@@ -51,19 +160,9 @@ def __nullcline_v_implicit__(v, parameters, hs, h):
     :return: v nullcline in implicit form
     """
     i_app = parameters["i_app"]
-    g_na = parameters["g_na"]
-    g_k = parameters["g_k"]
-    g_l = parameters["g_l"]
-    e_na = parameters["e_na"]
-    e_k = parameters["e_k"]
-    e_l = parameters["e_l"]
 
-    return (
-        i_app
-        - g_l * (v - e_l)
-        - g_k * (f(h) ** 3) * (v - e_k)
-        - g_na * h * hs * (m_inf(v) ** 3) * (v - e_na)
-    )
+    effective_state = [v, h, hs]
+    return i_app + total_current(effective_state, parameters)
 
 
 def nullcline_figure(v_range, i_app, stability, hs=1, color_h="black", color_v="grey"):
@@ -77,20 +176,19 @@ def nullcline_figure(v_range, i_app, stability, hs=1, color_h="black", color_v="
     :param color_v: Optional color for the v_nullcline color: defaults to grey
     :return: None
     """
-    # Compute voltage points
+    voltages = np.arange(*v_range)
 
-    v = np.arange(*v_range)
-    # Extract and plot the h nullcline
-    nh = nullcline_h(v)
-    plt.plot(v, nh, color_h, zorder=-1000)
+    # Compute nullclines
+    nh = nullcline_h(voltages)
+    nv = nullcline_v(voltages, i_app, hs=hs)
 
-    # Extract and plot the v nullcline
-    nv = nullcline_v(v, i_app, hs=hs)
-    plt.plot(v, nv, color_v)
+    # Plot nullclines
+    plt.plot(voltages, nh, color_h, zorder=-1000)
+    plt.plot(voltages, nv, color_v)
 
     # Lazily compute intersection and plot the stability (where closest only: not true intersection)
-    x_i, y_i = nullcline_intersection(nh, nv, v)
     style = "k" if stability else "none"
+    x_i, y_i = nullcline_intersection(nh, nv, voltages)
     plt.scatter(x_i, y_i, edgecolors="k", facecolor=style, zorder=1000)
 
 

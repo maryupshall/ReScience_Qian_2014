@@ -5,42 +5,29 @@ from ode_functions.current import sodium_current, total_current
 from ode_functions.gating import *
 
 
-def ode_2d(state, t, parameters, exp=np.exp):
+def ode_2d(state, _, parameters, exp=np.exp):
     """2 dimensional ODE
 
     :param state: State of the ODE (r.h.s of the ODE vector)
-    :param t: Current time
+    :param _: Current time
     :param parameters: Parameters
     :param exp: Which exponential function to use, defaults to numpy.exp
     :return: The r.h.s of the ODE
     """
     i_app = parameters["i_app"]
-    g_na = parameters["g_na"]
-    g_k = parameters["g_k"]
-    g_l = parameters["g_l"]
-    e_na = parameters["e_na"]
-    e_k = parameters["e_k"]
-    e_l = parameters["e_l"]
-
     v, h = state
-    n = f(h)
 
-    dv = (
-        i_app
-        - g_l * (v - e_l)
-        - g_na * (m_inf(v, exp=exp) ** 3) * h * (v - e_na)
-        - g_k * ((n ** 3) * (v - e_k))
-    )
+    dv = i_app + total_current(state, parameters, exp=exp)
     dh = -(h - (h_inf(v, exp=exp))) / (tau_h(v, exp=exp))
 
     return [dv, dh]
 
 
-def ode_3d(state, t, parameters, synapse=None, scale=1, exp=np.exp):
+def ode_3d(state, _, parameters, synapse=None, scale=1, exp=np.exp):
     """3 dimensional ODE
 
     :param state: State of the ODE (r.h.s of the ODE vector)
-    :param t: Current time
+    :param _: Current time
     :param parameters: Parameters
     :param synapse: Optional synapse function
     :param scale: Scaling factor for dhs. Used to explore convergence rate in paper
@@ -48,116 +35,92 @@ def ode_3d(state, t, parameters, synapse=None, scale=1, exp=np.exp):
     :return: The r.h.s of the ODE
     """
     i_app = parameters["i_app"]
-    g_na = parameters["g_na"]
-    g_k = parameters["g_k"]
-    g_l = parameters["g_l"]
-    e_na = parameters["e_na"]
-    e_k = parameters["e_k"]
-    e_l = parameters["e_l"]
-
     v, h, hs = state
-    n = f(h)
 
     i_syn = 0
     if synapse is not None:
         g_syn = parameters["g_syn"]
-        e_syn = 0  # parameters['e_syn'] I'm not sure about this?
+        e_syn = parameters["e_syn"]
 
         i_syn = synapse(v, g_syn, e_syn)
 
-    dv = (
-        i_app
-        - (g_l * (v - e_l))
-        - (g_na * (m_inf(v, exp=exp) ** 3) * h * hs * (v - e_na))
-        - (g_k * (n ** 3) * (v - e_k))
-        - i_syn
-    )
+    dv = i_app + total_current(state, parameters, exp=exp) - i_syn
     dh = -(h - (h_inf(v, exp=exp))) / (tau_h(v, exp=exp))
     dhs = -(hs - (hs_inf(v, exp=exp))) / (tau_hs(v, exp=exp)) * scale
 
     return [dv, dh, dhs]
 
 
-def ode_5d(state, t, parameters, shift=60):
+def ode_5d(state, _, parameters, use_modified_tau_n=True):
     """5 dimensional ODE
 
     :param state: State of the ODE (r.h.s of the ODE vector)
-    :param t: Current time
+    :param _: Current time
     :param parameters: Parameters
+    :param use_modified_tau_n: Optional parameter to use the original tau_n which does not work. Defaults to our tau_n
     :return: The r.h.s of the ODE
     """
     i_app = parameters["i_app"]
-    g_na = parameters["g_na"]
-    g_k = parameters["g_k"]
-    g_l = parameters["g_l"]
-    e_na = parameters["e_na"]
-    e_k = parameters["e_k"]
-    e_l = parameters["e_l"]
-
     v, h, hs, m, n = state
 
-    dv = (
-        i_app
-        - g_l * (v - e_l)
-        - g_na * (m ** 3) * h * hs * (v - e_na)
-        - g_k * (n ** 3) * (v - e_k)
-    )  # 3D model
+    dv = i_app + total_current(state, parameters)
     dh = -(h - (h_inf(v))) / (tau_h(v))
     dhs = -(hs - (hs_inf(v))) / (tau_hs(v))
     dm = -(m - (m_inf(v))) / (tau_m(v))
-    dn = -(n - (n_inf(v))) / (tau_n(v, shift=shift))
+    dn = -(n - (n_inf(v))) / (tau_n(v, use_modified_tau_n=use_modified_tau_n))
 
     return [dv, dh, dhs, dm, dn]
 
 
-def voltage_clamp(state, t, parameters, func):
+def voltage_clamp(state, _, parameters, func):
     """Perform voltage clamp on any ode
 
     Voltage is always the first variable in all ODEs
 
     :param state: State of the ODE (r.h.s of the ODE vector)
-    :param t: Current time
+    :param _: Current time
     :param parameters: Parameters
     :param func: ODE function to clamp
     :return: The ODE with voltage clamped
     """
-    return clamp_variable(state, t, parameters, func, 0)
+    return clamp_variable(state, _, parameters, func, 0)
 
 
-def hs_clamp(state, t, parameters):
+def hs_clamp(state, _, parameters):
     """Clamp hs in ode_3d (hs is the 3rd variable)
 
     :param state: State of the ODE (r.h.s of the ODE vector)
-    :param t: Current time
+    :param _: Current time
     :param parameters: Parameters
     :return: The 3d ODE with hs clamped
     """
     return clamp_variable(
-        state, t, parameters, ode_3d, 2, exp=sympy.exp
+        state, _, parameters, ode_3d, 2, exp=sympy.exp
     )  # only used for the bifn so use sympy.exp
 
 
-def clamp_variable(state, t, p, func, ix, exp=np.exp):
+def clamp_variable(state, _, p, func, ix, exp=np.exp):
     """Internal function for clamping an ode variable
 
     :param state: State of the ODE (r.h.s of the ODE vector)
-    :param t: Current time
+    :param _: Current time
     :param p: Parameters
     :param func: Which ode function to call
     :param ix: Index of ODE variable to clamp
     :param exp: Which exponential function to use
     :return: The r.h.s. of the ODE with a particular variables d/dt set to 0
     """
-    ddt = func(state, t, p, exp=exp)
+    ddt = func(state, _, p, exp=exp)
     ddt[ix] = 0
     return ddt
 
 
-def default_parameters(i_app=0, g_na=8):
+def default_parameters(i_app=0, g_na=8, g_syn=0):
     """Generate a dictionary for the default parameters
 
     :param i_app: Applied current - defaults to 0 if not specified
     :param g_na: Default sodium conductance - defaults to 8 if not specified
+    :param g_syn: Default synaptic conductance - defaults to 0 if not specified
     :return: Default parameters
     """
     g_k = 0.6  # mS/cm^2
@@ -174,6 +137,8 @@ def default_parameters(i_app=0, g_na=8):
         "e_l": e_l,
         "g_l": g_l,
         "i_app": i_app,
+        "g_syn": g_syn,
+        "e_syn": 0,  # todo is this true?
     }
 
     return params
@@ -196,37 +161,37 @@ def pattern_to_window_and_value(pattern, end_time):
     return list(zip(window, values))
 
 
-def pulse_ode_call(model_function, ic, t, parameter_name, value, model_parameters):
+def pulse_ode_call(model_function, ic, t_max, parameter_name, value):
     """Handle the decision making for how to call odeint when parameter is v_clamp or not
 
     Swaps model_function for voltage_clap when clamping and passes the model function in arguments
 
     :param model_function: Either function to pulse or function to clamp and clamp is pulsed
     :param ic: Initial conditions
-    :param t: Time for ode
+    :param t_max: Simulation end_time
     :param parameter_name: Name of parameter or flag to v_clamp
     :param value: Value of parameter or clamp potential
-    :param model_parameters: ode model parameters
     :return: ODE solution
     """
     # v_clamp the ic, set voltage_clamp to be solved and pass the model function in args
     if parameter_name is "v_clamp":
-        ic[
-            0
-        ] = value  # When clamping update the voltage to be the clamp (parameter) value
+        ic[0] = value
         ode_function = voltage_clamp
-        args = (model_parameters, model_function)
+        add_param = (model_function,)
+        kwargs = {}
     else:
         # Pass parameters as args and solve the specified function
-        args = (model_parameters,)
         ode_function = model_function
+        add_param = ()
+        kwargs = {parameter_name: value}
 
-    return odeint(ode_function, ic, t, args=args)
+    t, sol = solve_ode(
+        model=ode_function, ic=ic, t_max=t_max, additional_params=add_param, **kwargs,
+    )
+    return sol
 
 
-def pulse(
-    model, parameter_name, temporal_pattern: dict, t_max, ic, **kwargs
-):  # todo refactor for clamp
+def pulse(model, parameter_name, temporal_pattern, t_max, ic, **kwargs):
     """Apply a time dependent "pulse" to an ODE system.
 
     A pulse is a sequence of discrete changes to a constant parameters. The ODE is solved for each value seperately and
@@ -250,16 +215,21 @@ def pulse(
     # iterate over the time windows and set the parameter to value during the window
     for (t0, t1), value in sequence:
         parameters = default_parameters(**kwargs)
-        parameters[
-            parameter_name
-        ] = value  # set target parameter, this will also add the clamp_function but it wont be used
+        # update parameter name
+        parameters[parameter_name] = value
 
         #  generate new time steps and save
         t = np.arange(t0, t1, 0.1)
         t_solved = np.concatenate((t_solved, t))
 
         # Call ode and get model solution update
-        block_solution = pulse_ode_call(model, ic, t, parameter_name, value, parameters)
+        block_solution = pulse_ode_call(
+            model_function=model,
+            ic=ic,
+            t_max=t1 - t0,
+            parameter_name=parameter_name,
+            value=value,
+        )
 
         # Save solution and stimulus wave form and update ic for next window
         solution = np.vstack((solution, block_solution))  # keep track of solution
@@ -281,19 +251,20 @@ def compute_iv_current(solution, parameters, follow):
     :return: I(V)
     """
     if follow:
-        return -total_current(solution, parameters)[-1]  # [-1] give steady state
+        return -total_current(solution.T, parameters)[-1]  # [-1] give steady state
     else:
-        i_na = sodium_current(solution, parameters)
+        i_na = sodium_current(solution.T, parameters)
         pk = np.argmax(np.abs(i_na))  # intermediate pk allows for sign preservation
         return i_na[pk]
 
 
-def solve_ode(model, ic, t_max, dt=0.1, rtol=None, **kwargs):
+def solve_ode(model, ic, t_max, additional_params=(), dt=0.1, rtol=None, **kwargs):
     """Solve an ode model with settings
 
     :param model: ODE Model to solve
     :param ic: Initial conditions
     :param t_max: Simulation end time
+    :param additional_params: Additional parameters (function to clamp) to pass to odeint
     :param dt: Time step to save at (defaults to 0.1ms)
     :param rtol: Relative tolerance (defaults to none)
     :param kwargs: Optional arguments to set parameters
@@ -304,7 +275,7 @@ def solve_ode(model, ic, t_max, dt=0.1, rtol=None, **kwargs):
     t = np.arange(0, t_max, dt)
 
     # Solve and return solution
-    solution = odeint(model, ic, t, args=(parameters,), rtol=rtol)
+    solution = odeint(model, ic, t, args=(parameters,) + additional_params, rtol=rtol)
     return t, solution
 
 
@@ -330,12 +301,13 @@ def current_voltage_curve(model, clamp_range, t_max, ic, follow=False, **kwargs)
     voltage = np.arange(*clamp_range)
     current = np.zeros(voltage.shape)
     state = np.array([ic])  # inital state is ic; array([ic]) gives a 2d array
-    time_points = np.arange(0, t_max)
 
     # Update model inital state according to IV curve type, run voltage clamp and save I(V)
     for ix, v in enumerate(voltage):
         ic = update_ic(v, ic, state, follow)
-        state = odeint(voltage_clamp, ic, time_points, args=(parameters, model))
+        _, state = solve_ode(
+            model=voltage_clamp, ic=ic, t_max=t_max, additional_params=(model,)
+        )
         current[ix] = compute_iv_current(state, parameters, follow)
 
     return current, voltage
@@ -367,8 +339,8 @@ def steady_state_when_clamped(v_clamp):
     :param v_clamp: Voltage to clamp to
     :return: Steady state of the neuron at v_clamp
     """
-    state = odeint(
-        voltage_clamp, [v_clamp, 1, 1], [0, 500], args=(default_parameters(), ode_3d)
+    _, state = solve_ode(
+        model=voltage_clamp, ic=[v_clamp, 1, 1], t_max=500, additional_params=(ode_3d,)
     )
     return state[-1, :]
 
