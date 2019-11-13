@@ -1,6 +1,6 @@
-### Replication of asdf
+### ReScience Replication Code
 
-### Manuscript
+#### Manuscript
 
 The article is in article. To compile the PDF run  
 
