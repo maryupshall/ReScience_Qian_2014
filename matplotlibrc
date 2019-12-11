@@ -1,0 +1,18 @@
+#### MATPLOTLIBRC FORMAT
+legend.borderpad     : 0
+legend.loc           : upper left
+legend.frameon       : True
+legend.edgecolor     : k
+
+
+legend.fontsize      : 8
+legend.title_fontsize : 10
+xtick.labelsize      : 8
+ytick.labelsize      : 8
+
+axes.labelsize       : 10
+
+mathtext.rm  : serif
+mathtext.it  : serif:italic
+mathtext.bf  : serif:bold
+mathtext.default: regular

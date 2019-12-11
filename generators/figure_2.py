@@ -1,72 +1,98 @@
-from scipy.integrate import odeint
+import matplotlib.pyplot as plt
 
-from helpers.nullclines import nullcline_h, nullcline_v
-from helpers.plotting import *
-from ode_functions.diff_eq import ode_2d, default_parameters
-from ode_functions.gating import *
+from ode_functions.diff_eq import ode_2d, pulse
+from ode_functions.nullclines import nullcline_figure
+from plotting import init_figure, save_fig, set_properties
 
 
 def run():
+    """Top level runner for figure 2
+    :return: None
+    """
+    print("Running: Figure 2")
+
     init_figure(size=(5, 3))
     plt.subplot2grid((2, 2), (0, 0), colspan=2, rowspan=1)
-    __figure2a__('A')
+    figure2a("A")
 
     for ix, col in enumerate([0, 1]):
         plt.subplot2grid((2, 2), (1, col), colspan=1, rowspan=1)
-        __figure2b__('B' + str(ix+1), ix=ix)
+        figure2b("B" + str(ix + 1), panel=ix)
 
-    save_fig('2')
-
-
-def __figure2a__(title):
-    ic = [-35, 1]
-    t_solved = np.array([])
-    solution = np.array([0, 0])
-    currents = [0, 3.5]
-    times = [2000, 3000]
-    t0 = 0
-
-    for ix, I_app in enumerate(currents):
-        t = np.arange(t0, times[ix], 0.1)
-        t0 = times[ix]
-        t_solved = np.concatenate((t_solved, t))
-
-        parameters = default_parameters(i_app=I_app)
-        state = odeint(ode_2d, ic, t, args=(parameters,))
-        ic = state[-1, :]
-
-        solution = np.vstack((solution, state))
-
-    solution = solution[1:, :]  # first row is [0,0] for starting shape so omit
-
-    stimulus = np.zeros(t_solved.shape)
-    stimulus[t_solved > times[0]] = currents[1]
-
-    plt.plot(t_solved, solution[:, 0], "k")
-    set_properties(title, y_label="V (mV)", y_tick=[-40, -20, 0, 20])
-
-    plt.plot(t_solved, stimulus - 70, "grey")
+    save_fig("2")
 
 
-def __figure2b__(title, ix=0):
-    i_app_list = [0, 3.5]
-    v = np.arange(-90, 50)
-    nh = nullcline_h(v)
+def figure2a(title):
+    """Compute 2d model response to step current input for figure 2A
 
-    I_app = i_app_list[ix]
+    :param title: Plot title (panel label)
+    :return: None
+    """
+    # Compute a 3000ms simulation with i_app=0 at t=0 and then i_app=3.5 at t=2000
+    pattern = {0: 0, 2000: 3.5}
+    end_time = 3000
+    initial_condition = [-35, 1]
 
-    plt.plot(v, nh, 'k')
-    nv = nullcline_v(v, I_app)
+    # Solve ode_2d for a current pulse with above parameters
+    solution, t, waveform = pulse(
+        model=ode_2d,
+        parameter_name="i_app",
+        temporal_pattern=pattern,
+        t_max=end_time,
+        ic=initial_condition,
+    )
 
-    plt.plot(v, nv, '--', color='grey')
-    style = 'k' if ix == 1 else 'none'
-    cross_index = np.argmin(np.abs(nv - nh))
-    plt.scatter(v[cross_index], nv[cross_index], edgecolors='k', facecolors=style)
+    # since the model remains in depolarization block the last time step is sufficient
+    v = solution[:, 0]
+    block_potential = v[-1]
 
-    y_label = "h"
-    y_ticklabel = None
-    if ix == 1:
-        y_label = ""
-        y_ticklabel = []
-    set_properties(title, x_label="v (mV)", y_label=y_label, x_tick=[-50, 0, 50], y_tick=[0, 0.1, 0.2, 0.3, 0.4],
-                   x_limits=[-75, 50], y_limits=[0, 0.4], y_ticklabel=y_ticklabel)
+    plt.text(
+        2500,
+        block_potential + 10,
+        "{0:.1f}".format(block_potential),
+        horizontalalignment="center",
+    )
+
+    # Plot voltage trace
+    plt.plot(t, v, "k")
+    plt.plot(t, waveform - 70, "grey")
+
+    # Plot properties
+    set_properties(
+        title,
+        y_label="V (mV)",
+        y_tick=[-60, -30, 0, 30],
+        x_tick=[0, 1500, 3000],
+        x_limits=[0, 3000],
+    )
+
+
+def figure2b(title, panel=0):
+    """Plot nullclines for different model regimes in different panels for 2B
+
+    Model regimes are taken from before depolarization block and after
+
+    :param title: Plot title (panel label)
+    :param panel: Which plot to make, without current (panel=0) or without current (panel=1)
+    :return: None
+    """
+    # Select appropriate current regime depending on panel
+    i_app = [0, 3.5][panel]
+
+    # Compute nullcline and set the stability
+    s = panel == 1  # panel==1 means 2nd panel is stable
+    nullcline_figure(v_range=[-90, 50], i_app=i_app, stability=s)
+
+    # Plot Properties
+    y_label = "h" if panel == 0 else ""
+    y_ticklabel = None if panel == 0 else []
+    set_properties(
+        title,
+        x_label="V (mV)",
+        y_label=y_label,
+        x_tick=[-50, 0, 50],
+        y_tick=[0, 0.1, 0.2, 0.3, 0.4],
+        x_limits=[-75, 50],
+        y_limits=[0, 0.4],
+        y_ticklabel=y_ticklabel,
+    )
