@@ -66,7 +66,7 @@ def figure1_supplemental_files():
 
     """
     Similarly to figure 1A they report 9.12nS/cm^2 again we will assume this 9.12nS but 9.12mS/cm^2 additionally if we
-    use a pule width of 3ms as reported we see the current is far too large
+    use a pulse width of 3ms as reported we see the current is far too large
     """
     figure_1b("Supplemental 1B(v1)", g_na=9.12, pulse_width=3)
     save_fig("supp_1B_v1")
@@ -94,8 +94,8 @@ def figure1_supplemental_files():
     Incidentally this looks more like the GABA neuron in their cited Seutin and Engel paper (2010) with a rounded trough
     see figure 7B
     """
-    figure1d("Supplemental 1D2", panel=1, use_modified_tau_n=False)
-    save_fig("supp_1D2")
+    figure1d("Supplemental 1D1", panel=0, use_modified_tau_n=False)
+    save_fig("supp_1D1")
 
 
 def figure_1a(title, g_na=5.92 * 0.514, v_reset=-120):
@@ -247,7 +247,7 @@ def figure_1c(title, use_modified_tau_n=True):
 
     # Solve 5d model with appropriate tau_n
     partial_5d = partial(ode_5d, use_modified_tau_n=use_modified_tau_n)
-    t, sol = solve_ode(partial_5d, initial_condition, t_max=4200, dt=0.1, rtol=1e-3)
+    t, sol = solve_ode(partial_5d, initial_condition, t_max=4200, rtol=1e-3)
 
     # Extract h and n and discard the first half due to transient
     ix_half_time = int(len(t) / 2)
@@ -277,15 +277,15 @@ def fit_f_approx(h, n):
 
 
 def figure1d(title, panel=0, use_modified_tau_n=True):
-    """Show waveforms for 3d (ix=0) or 5d (ix=1) models
+    """Show waveforms for 5d (ix=0) or 3d (ix=0) models
 
     :param title: Plot title (panel label)
-    :param panel: Set the model to use 3d/5d (panel=0/1)
+    :param panel: Set the model to use 5d/3d (panel=0/1)
     :param use_modified_tau_n: Optional parameter to use the original tau_n which does not work. Defaults to our tau_n
     :return: None
     """
     # Select appropriate model depending on the panel
-    model = [ode_3d, ode_5d][panel]
+    model = [ode_5d, ode_3d][panel]
 
     # Run the simulation for 4200ms and start at an arbitrary point "close" to the limit cycle
     initial_condition = [-55, 0, 0]
@@ -295,7 +295,7 @@ def figure1d(title, panel=0, use_modified_tau_n=True):
     if model == ode_5d:
         model = partial(ode_5d, use_modified_tau_n=use_modified_tau_n)
 
-    t, sol = solve_ode(model, initial_condition, t_max=4200, dt=0.1, rtol=1e-3)
+    t, sol = solve_ode(model, initial_condition, t_max=4200, rtol=1e-3)
 
     # Throw away the first 1000ms of the simulation
     t_throw_away = np.where(t > 1000)[0][0]
@@ -318,3 +318,4 @@ def figure1d(title, panel=0, use_modified_tau_n=True):
         x_tick=[0, 1000, 2000, 3000],
         x_limits=[0, 3000],
     )
+run()
