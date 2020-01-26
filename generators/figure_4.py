@@ -71,6 +71,8 @@ def figure4a(title, panel=0):
             x_limits=(-40, 5),
             y_limits=(0, 0.15),
         )
+        plt.annotate("", xy=(-15, 0.05), xytext=(-20, 0.07),
+                     arrowprops=dict(arrowstyle="->"))
     else:
         set_properties(
             title,
@@ -80,6 +82,9 @@ def figure4a(title, panel=0):
             x_limits=(-80, 20),
             y_limits=(0, 0.4),
         )
+        plt.annotate("", xy=(-25, 0.3), xytext=(-20, 0.2),
+                     arrowprops=dict(arrowstyle="->"))
+
 
 
 def figure4b(title, panel=0):

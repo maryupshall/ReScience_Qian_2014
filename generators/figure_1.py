@@ -277,7 +277,7 @@ def fit_f_approx(h, n):
 
 
 def figure1d(title, panel=0, use_modified_tau_n=True):
-    """Show waveforms for 5d (ix=0) or 3d (ix=0) models
+    """Show waveforms for 5d (ix=0) or 3d (ix=1) models
 
     :param title: Plot title (panel label)
     :param panel: Set the model to use 5d/3d (panel=0/1)
@@ -318,4 +318,3 @@ def figure1d(title, panel=0, use_modified_tau_n=True):
         x_tick=[0, 1000, 2000, 3000],
         x_limits=[0, 3000],
     )
-run()
