@@ -1,3 +1,7 @@
+"""Run figure 2.
+
+run() will create all subplots and save them to ../figures
+"""
 import matplotlib.pyplot as plt
 
 from ode_functions.diff_eq import ode_2d, pulse
@@ -6,7 +10,8 @@ from plotting import init_figure, save_fig, set_properties
 
 
 def run():
-    """Top level runner for figure 2
+    """Top level runner for figure 2.
+
     :return: None
     """
     print("Running: Figure 2")
@@ -23,7 +28,7 @@ def run():
 
 
 def figure2a(title):
-    """Compute 2d model response to step current input for figure 2A
+    """Compute 2d model response to step current input for figure 2A.
 
     :param title: Plot title (panel label)
     :return: None
@@ -68,7 +73,7 @@ def figure2a(title):
 
 
 def figure2b(title, panel=0):
-    """Plot nullclines for different model regimes in different panels for 2B
+    """Plot nullclines for different model regimes in different panels for 2B.
 
     Model regimes are taken from before depolarization block and after
 

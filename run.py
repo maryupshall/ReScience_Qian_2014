@@ -1,3 +1,13 @@
+"""Main run script for whole analysis.
+
+This should be ran from the CLI as python run.py 'x'
+
+Where x can be
+    nothing to run all figures
+    all to run all figures
+    f1, f2, f3, f4, or f6 to run a specific figure
+"""
+
 import glob
 import os
 import shutil
@@ -7,13 +17,13 @@ from generators import figure_1, figure_2, figure_3, figure_4, figure_6
 
 
 def run_all(function_dict):
-    """Run all figures in a dict with each value being a figure module"""
+    """Run all figures in a dict with each value being a figure module."""
     for f in function_dict.values():
         f.run()
 
 
-def __clean__():
-    """Cleanup temp files from auto"""
+def clean():
+    """Cleanup temp files from auto."""
     try:
         shutil.rmtree("auto_temp/")
     except OSError:
@@ -56,4 +66,4 @@ if __name__ == "__main__":
     else:
         run_all(switcher)
 
-    __clean__()
+    clean()

@@ -1,8 +1,9 @@
+"""Defines all gating functions for ODEs."""
 import numpy as np
 
 
 def x_inf(v, x_half, x_slope, exp=np.exp):
-    """Steady-state activation for variable
+    """Steady-state activation for variable.
 
     :param v: Membrane potential
     :param x_half: Half max voltage
@@ -14,7 +15,7 @@ def x_inf(v, x_half, x_slope, exp=np.exp):
 
 
 def m_inf(v, exp=np.exp):
-    """Steady-state activation variable for m
+    """Steady-state activation variable for m.
 
     :param v: Membrane potential
     :param exp: Exponential function to use
@@ -26,7 +27,7 @@ def m_inf(v, exp=np.exp):
 
 
 def h_inf(v, exp=np.exp):
-    """Steady-state activation variable for h
+    """Steady-state activation variable for h.
 
     :param v: Membrane potential
     :param exp: Exponential function to use
@@ -38,7 +39,7 @@ def h_inf(v, exp=np.exp):
 
 
 def hs_inf(v, exp=np.exp):
-    """Steady-state activation variable for hs
+    """Steady-state activation variable for hs.
 
     :param v: Membrane potential
     :param exp: Exponential function to use
@@ -50,7 +51,7 @@ def hs_inf(v, exp=np.exp):
 
 
 def n_inf(v, exp=np.exp):
-    """Steady-state activation variable for n
+    """Steady-state activation variable for n.
 
     :param v: Membrane potential
     :param exp: Exponential function to use
@@ -62,7 +63,7 @@ def n_inf(v, exp=np.exp):
 
 
 def tau_h(v, exp=np.exp):
-    """Time constant (\tau) for variable h
+    """Time constant (tau) for variable h.
 
     :param v: Membrane potential
     :param exp: Exponential function to use
@@ -75,7 +76,7 @@ def tau_h(v, exp=np.exp):
 
 
 def tau_hs(v, exp=np.exp):
-    """Time constant (\tau) for variable hs
+    """Time constant (tau) for variable hs.
 
     :param v: Membrane potential
     :param exp: Exponential function to use
@@ -85,7 +86,7 @@ def tau_hs(v, exp=np.exp):
 
 
 def tau_m(v, exp=np.exp):
-    """Time constant (\tau) for variable m
+    """Time constant (tau) for variable m.
 
     :param v: Membrane potential
     :param exp: Exponential function to use
@@ -98,7 +99,7 @@ def tau_m(v, exp=np.exp):
 
 
 def tau_n(v, exp=np.exp, use_modified_tau_n=True):
-    """Time constant (\tau) for variable n
+    """Time constant (tau) for variable n.
 
     :param v: Membrane potential
     :param exp: Exponential function to use
@@ -110,7 +111,7 @@ def tau_n(v, exp=np.exp, use_modified_tau_n=True):
 
 
 def f_approx(h):
-    """f(h) is a dimension reduction where n is represented as a function f(h)
+    """f(h) is a dimension reduction where n is represented as a function f(h).
 
     :param h: Gating variable h
     :return: f(h)

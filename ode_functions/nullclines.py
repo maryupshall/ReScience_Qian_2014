@@ -1,3 +1,4 @@
+"""Collection of functions for computing nullclines and generating traces with them."""
 from functools import partial
 
 import matplotlib.pyplot as plt
@@ -9,7 +10,7 @@ from ode_functions.diff_eq import h_inf, default_parameters
 
 
 def nullcline_h(v):
-    """h nullcline.
+    """Compute the h nullcline.
 
     Simply a call to h_inf as they're the same. This function provides a similar naming as to nullcline_v
 
@@ -56,7 +57,7 @@ def __nullcline_v_implicit__(v, parameters, hs, h):
 
 
 def nullcline_figure(v_range, i_app, stability, hs=1, color_h="black", color_v="grey"):
-    """Helper function for creating nullcline figure.
+    """Create tandard nullcline-curve figure.
 
     :param v_range: Min and max voltage to use
     :param i_app: Injected current

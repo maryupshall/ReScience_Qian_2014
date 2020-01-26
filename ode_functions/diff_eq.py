@@ -1,3 +1,7 @@
+"""Monolithic module for solving all ODE problems.
+
+Provides functionality to create 2,3,5D ode systems. Clamping variables, and applying discrete current pulses.
+"""
 import sympy
 from scipy.integrate import odeint
 
@@ -6,7 +10,7 @@ from ode_functions.gating import *
 
 
 def ode_2d(state, _, parameters, exp=np.exp):
-    """2 dimensional ODE
+    """Compute the two dimensional ODE.
 
     :param state: State of the ODE (r.h.s of the ODE vector)
     :param _: Current time
@@ -24,7 +28,7 @@ def ode_2d(state, _, parameters, exp=np.exp):
 
 
 def ode_3d(state, _, parameters, synapse=None, scale=1, exp=np.exp):
-    """3 dimensional ODE
+    """Compute the three dimensional ODE.
 
     :param state: State of the ODE (r.h.s of the ODE vector)
     :param _: Current time
@@ -52,7 +56,7 @@ def ode_3d(state, _, parameters, synapse=None, scale=1, exp=np.exp):
 
 
 def ode_5d(state, _, parameters, use_modified_tau_n=True):
-    """5 dimensional ODE
+    """Compute the five dimensional ODE.
 
     :param state: State of the ODE (r.h.s of the ODE vector)
     :param _: Current time
@@ -73,12 +77,12 @@ def ode_5d(state, _, parameters, use_modified_tau_n=True):
 
 
 def voltage_clamp(state, _, parameters, func):
-    """Perform voltage clamp on any ode
+    """Perform voltage clamp on any ode.
 
     Voltage is always the first variable in all ODEs
 
     :param state: State of the ODE (r.h.s of the ODE vector)
-    :param _: Current time
+    :param _: Ignored
     :param parameters: Parameters
     :param func: ODE function to clamp
     :return: The ODE with voltage clamped
@@ -87,10 +91,10 @@ def voltage_clamp(state, _, parameters, func):
 
 
 def hs_clamp(state, _, parameters):
-    """Clamp hs in ode_3d (hs is the 3rd variable)
+    """Clamp hs in ode_3d (hs is the 3rd variable).
 
     :param state: State of the ODE (r.h.s of the ODE vector)
-    :param _: Current time
+    :param _: Ignored
     :param parameters: Parameters
     :return: The 3d ODE with hs clamped
     """
@@ -100,13 +104,13 @@ def hs_clamp(state, _, parameters):
 
 
 def clamp_variable(state, _, p, func, ix, exp=np.exp):
-    """Internal function for clamping an ode variable
+    """Clamp a specifed ode variable.
 
     :param state: State of the ODE (r.h.s of the ODE vector)
-    :param _: Current time
+    :param _: Ignored
     :param p: Parameters
     :param func: Which ode function to call
-    :param ix: Index of ODE variable to clamp
+    :param ix: Index of ODE variable to clamp (i.e. ix=0 clamps V)
     :param exp: Which exponential function to use
     :return: The r.h.s. of the ODE with a particular variables d/dt set to 0
     """
@@ -116,7 +120,7 @@ def clamp_variable(state, _, p, func, ix, exp=np.exp):
 
 
 def default_parameters(i_app=0, g_na=8, g_syn=0):
-    """Generate a dictionary for the default parameters
+    """Generate a dictionary for the default parameters.
 
     :param i_app: Applied current - defaults to 0 if not specified
     :param g_na: Default sodium conductance - defaults to 8 if not specified
@@ -138,14 +142,14 @@ def default_parameters(i_app=0, g_na=8, g_syn=0):
         "g_l": g_l,
         "i_app": i_app,
         "g_syn": g_syn,
-        "e_syn": 0,  # todo is this true?
+        "e_syn": 0,
     }
 
     return params
 
 
 def pattern_to_window_and_value(pattern, end_time):
-    """Convert a pattern dictionary to an iterable tuple of time windows (start, stop) and parameter values
+    """Convert a pattern dictionary to an iterable tuple of time windows (start, stop) and parameter values.
 
     :param pattern: Pattern dict formatted like {t_event:value}
     :param end_time: End of the simulation
@@ -162,7 +166,7 @@ def pattern_to_window_and_value(pattern, end_time):
 
 
 def pulse_ode_call(model_function, ic, t_max, parameter_name, value):
-    """Handle the decision making for how to call odeint when parameter is v_clamp or not
+    """Handle the decision making for how to call odeint when parameter is v_clamp or not.
 
     Swaps model_function for voltage_clap when clamping and passes the model function in arguments
 
@@ -198,12 +202,13 @@ def pulse(model, parameter_name, temporal_pattern, t_max, ic, **kwargs):
     stitched together with the IC of the next step being the end point of the current step
 
     For example injecting a dc-current at t=1000
+
     :param model: ODE function to apply pulse to
     :param parameter_name: Parameter to
     :param temporal_pattern: A dictionary of time:value pairs {0: 0, 1000:1} will set the parameter to 0 at t=0 and 1 and t=1000
     :param t_max: Time to end the simulation at
     :param ic: Simulation initial condition
-    :param kwargs: Additional parameters to set for default parameters (?)
+    :param kwargs: Additional parameters to set for default parameters
     :return: The solved continuous ode, the time points and the waveform of the property
     """
     # Initialize data holders
@@ -241,7 +246,7 @@ def pulse(model, parameter_name, temporal_pattern, t_max, ic, **kwargs):
 
 
 def compute_iv_current(solution, parameters, follow):
-    """Compute the current of the IV curve at a given clamp voltage given the follow rule
+    """Compute the current of the IV curve at a given clamp voltage given the follow rule.
 
     If follow mode: I(V) is the steady state current, otherwise we use the peak amplitude current of the transient
 
@@ -259,7 +264,7 @@ def compute_iv_current(solution, parameters, follow):
 
 
 def solve_ode(model, ic, t_max, additional_params=(), dt=0.1, rtol=None, **kwargs):
-    """Solve an ode model with settings
+    """Solve an ode model with settings.
 
     :param model: ODE Model to solve
     :param ic: Initial conditions
@@ -280,7 +285,7 @@ def solve_ode(model, ic, t_max, additional_params=(), dt=0.1, rtol=None, **kwarg
 
 
 def current_voltage_curve(model, clamp_range, t_max, ic, follow=False, **kwargs):
-    """Compute IV curve in either follow mode or peak mode
+    """Compute IV curve in either follow mode or peak mode.
 
     In follow mode a traditional IV curve is computed where the I(V) is the steady state current at a clamped voltage
     for efficiency the initial condition of the next voltage level is the steady state of the present clamp.
@@ -314,7 +319,7 @@ def current_voltage_curve(model, clamp_range, t_max, ic, follow=False, **kwargs)
 
 
 def update_ic(v, ic, state, follow):
-    """Set the initial condition for the IV curve at a particular clamp voltage depending on the mode
+    """Set the initial condition for the IV curve at a particular clamp voltage depending on the mode.
 
     If follow mode then the clamp voltage is combined with the state. Otherwise the clamp voltage is combined with the
     reset ic
@@ -334,7 +339,7 @@ def update_ic(v, ic, state, follow):
 
 
 def steady_state_when_clamped(v_clamp):
-    """Determine the steady-state of ode_3d when clamped to a voltage
+    """Determine the steady-state of ode_3d when clamped to a voltage.
 
     :param v_clamp: Voltage to clamp to
     :return: Steady state of the neuron at v_clamp
@@ -346,7 +351,7 @@ def steady_state_when_clamped(v_clamp):
 
 
 def resize_initial_condition(ic, model, fill=1):
-    """Correct the dimension of an initial condition
+    """Correct the dimension of an initial condition.
 
     Given a potentially valid initial condition (correct number of dimensions) either cut off the excess dimensions or
     append `fill` n times to fill the inital conditions to the correct size

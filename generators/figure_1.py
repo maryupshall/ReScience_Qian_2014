@@ -1,3 +1,7 @@
+"""Run figure 1.
+
+run() will create all subplots and save them to ../figures
+"""
 from functools import partial
 
 import matplotlib.pyplot as plt
@@ -20,7 +24,8 @@ from plotting import init_figure, save_fig, set_properties
 
 
 def run():
-    """Top level runner for figure 1
+    """Top level runner for figure 1.
+
     :return: None
     """
     print("Running: Figure 1")
@@ -45,7 +50,7 @@ def run():
 
 
 def figure1_supplemental_files():
-    """Make supplemental figures using unmodified parameters taken directly from paper data"""
+    """Make supplemental figures using unmodified parameters taken directly from paper data."""
     """
     If we take the paper's value of 5.92 nS and a 1cm^2 patch is equivalent to 5.92/1e6 mS/cm^2
     This gives a plot scaled to almost 0 because this is a negligible effective channel density
@@ -99,14 +104,14 @@ def figure1_supplemental_files():
 
 
 def figure_1a(title, g_na=5.92 * 0.514, v_reset=-120):
-    """Compute IV curve for 2d and 3d ode model
+    """Compute IV curve for 2d and 3d ode model.
 
     Based on the paper's reference of Seutin and Engel 2010 we believe what should have happened is Vm is clamped to
     -120 mV then Vm is clamped to a series of voltages: being returned to Vm=-120 each time. For each jump the peak Ina
     is computed
 
     Using the Paper's g_na = 5.92 we find a peak IV at -311 uA/cm^2 whereas the target is ~-160 uA/cm^2 so we rescale
-    g_na to 5.92*160/311 which gives a peak IV curve at ~-160 uA/cm^2     todo: discuss in paper
+    g_na to 5.92*160/311 which gives a peak IV curve at ~-160 uA/cm^2
 
     :param title: Plot title (panel label)
     :param g_na: Optional sodium conductance to use: defaults to working parameter
@@ -146,7 +151,7 @@ def figure_1a(title, g_na=5.92 * 0.514, v_reset=-120):
 
 
 def generate_clamp_pattern_1b(t_max, pulse_width=5):
-    """Helper function to generate the waveform for figure 1b
+    """Generate the stimulus waveform for figure 1b.
 
     Figure 1b requires a clamp waveform with timing requirements that are annoying to generate this function
     encapsulate that operation
@@ -185,7 +190,7 @@ def generate_clamp_pattern_1b(t_max, pulse_width=5):
 
 
 def figure_1b(title, g_na=5.92, pulse_width=5):
-    """Compute the periodic step current response from figure 1B
+    """Compute the periodic step current response from figure 1B.
 
     Clamp to membrane potential to -80 then depolarize and rest the membrane potential to 0mV and -70mV every 100ms with
     5mV pulses to 0mV.
@@ -223,7 +228,7 @@ def figure_1b(title, g_na=5.92, pulse_width=5):
     set_properties(
         title,
         x_label="Time (ms)",
-        y_label="",  # this is actually uA/cm^2 todo discuss in paper
+        y_label="",  # this is actually uA/cm^2
         x_tick=[0, 200, 400],
         y_tick=[-250, -200, 0],
         x_limits=[-50, 450],
@@ -231,7 +236,7 @@ def figure_1b(title, g_na=5.92, pulse_width=5):
 
 
 def figure_1c(title, use_modified_tau_n=True):
-    """Compute limit cycle in n,h phase space for the 5d model and compute the approximation n=f(h) for 1C
+    """Compute limit cycle in n,h phase space for the 5d model and compute the approximation n=f(h) for 1C.
 
     :param title: Plot title (panel label)
     :param use_modified_tau_n: Optional parameter to use the original tau_n which does not work. Defaults to our tau_n
@@ -272,12 +277,18 @@ def figure_1c(title, use_modified_tau_n=True):
 
 
 def fit_f_approx(h, n):
+    """Fit the f(h) curve for the approximation to 3D.
+
+    :param h: The h variable for the limit cycle
+    :param n: The n variable for the limit cycle
+    :return: The fit object
+    """
     replicate_fit = np.poly1d(np.polyfit(h, n, deg=3))
     print(replicate_fit)
 
 
 def figure1d(title, panel=0, use_modified_tau_n=True):
-    """Show waveforms for 5d (ix=0) or 3d (ix=1) models
+    """Show waveforms for 5d (ix=0) or 3d (ix=1) models.
 
     :param title: Plot title (panel label)
     :param panel: Set the model to use 5d/3d (panel=0/1)

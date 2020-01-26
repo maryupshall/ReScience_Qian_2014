@@ -1,10 +1,16 @@
+"""Collection of functions for computing different types of current.
+
+Membrane current
+Individual ionic current
+AMPA/NMDA current
+"""
 import numpy as np
 
 from ode_functions.gating import f_approx, m_inf
 
 
 def leak_current(solution, parameters):
-    """Compute leak current from 2d,3d and 5d model
+    """Compute leak current from 2d,3d and 5d model.
 
     Solution must either be 1d (1 time point) or variables on rows for slicing
 
@@ -46,7 +52,7 @@ def sodium_current(solution, parameters, exp=np.exp):
 
 
 def potassium_current(solution, parameters):
-    """Compute potassium current from 2d,3d and 5d model
+    """Compute potassium current from 2d,3d and 5d model.
 
     Solution must either be 1d (1 time point) or variables on rows for slicing
 
@@ -83,7 +89,7 @@ def total_current(solution, parameters, exp=np.exp):
 
 
 def nmda_current(v, g_syn, e_syn, mg=1.4):
-    """Current from an nmda synapse
+    """Compute the current from an nmda synapse.
 
     :param v: Membrane potential
     :param g_syn: Synaptic conductance
@@ -95,7 +101,7 @@ def nmda_current(v, g_syn, e_syn, mg=1.4):
 
 
 def ampa_current(v, g_syn, e_syn):
-    """Current from an ampa synapse
+    """Compute the current from an ampa synapse.
 
     :param v: Membrane potential
     :param g_syn: Synaptic conductance
