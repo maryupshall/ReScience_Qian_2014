@@ -1,6 +1,7 @@
 from functools import partial
 
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.optimize import newton
 
 from ode_functions.current import total_current
@@ -8,7 +9,7 @@ from ode_functions.diff_eq import h_inf, default_parameters
 
 
 def nullcline_h(v):
-    """h nullcline
+    """h nullcline.
 
     Simply a call to h_inf as they're the same. This function provides a similar naming as to nullcline_v
 
@@ -19,7 +20,7 @@ def nullcline_h(v):
 
 
 def nullcline_v(voltages, i_app, hs=1):
-    """Compute the v nullcline
+    """Compute the v nullcline.
 
     Computes the v nullcline for all values of v specified via newton's method
 
@@ -39,119 +40,8 @@ def nullcline_v(voltages, i_app, hs=1):
     return nullcline
 
 
-import numpy as np
-
-
-def x_inf(v, x_half, x_slope, exp=np.exp):
-    """Steady-state activation for variable
-
-    :param v: Membrane potential
-    :param x_half: Half max voltage
-    :param x_slope: Slope at half max
-    :param exp: Function to call for exponential: should be overridden for symbolic exponential (sympy.exp)
-    :return: x_inf(v)
-    """
-    return 1 / (1 + exp(-(v - x_half) / x_slope))
-
-
-def m_inf(v, exp=np.exp):
-    """Steady-state activation variable for m
-
-    :param v: Membrane potential
-    :param exp: Exponential function to use
-    :return: m_inf(v)
-    """
-    m_half = -30.0907
-    m_slope = 9.7264
-    return x_inf(v, m_half, m_slope, exp=exp)
-
-
-def h_inf(v, exp=np.exp):
-    """Steady-state activation variable for h
-
-    :param v: Membrane potential
-    :param exp: Exponential function to use
-    :return: h_inf(v)
-    """
-    h_half = -54.0289
-    h_slope = -10.7665
-    return x_inf(v, h_half, h_slope, exp=exp)
-
-
-def hs_inf(v, exp=np.exp):
-    """Steady-state activation variable for hs
-
-    :param v: Membrane potential
-    :param exp: Exponential function to use
-    :return: hs_inf(v)
-    """
-    hs_half = -54.8
-    hs_slope = -1.57
-    return x_inf(v, hs_half, hs_slope, exp=exp)
-
-
-def n_inf(v, exp=np.exp):
-    """Steady-state activation variable for n
-
-    :param v: Membrane potential
-    :param exp: Exponential function to use
-    :return: hs_inf(v)
-    """
-    n_half = -25
-    n_slope = 12
-    return x_inf(v, n_half, n_slope, exp=exp)
-
-
-def tau_h(v, exp=np.exp):
-    """Time constant (\tau) for variable h
-
-    :param v: Membrane potential
-    :param exp: Exponential function to use
-    :return: tau_h(v)
-    """
-    a = 0.00050754 * exp(-0.063213 * v)
-    b = 9.7529 * exp(0.13442 * v)
-
-    return 0.4 + 1 / (a + b)
-
-
-def tau_hs(v, exp=np.exp):
-    """Time constant (\tau) for variable hs
-
-    :param v: Membrane potential
-    :param exp: Exponential function to use
-    :return: tau_hs(v)
-    """
-    return 20 + 160 / (1 + exp((v + 47.2) / 1))
-
-
-def tau_m(v, exp=np.exp):
-    """Time constant (\tau) for variable m
-
-    :param v: Membrane potential
-    :param exp: Exponential function to use
-    :return: tau_m(v)
-    """
-    a = -(15.6504 + (0.4043 * v)) / (exp(-19.565 - (0.50542 * v)) - 1)
-    b = 3.0212 * exp(-0.0074630 * v)
-
-    return 0.01 + 1 / (a + b)
-
-
-def tau_n(v, exp=np.exp, use_modified_tau_n=True):
-    """Time constant (\tau) for variable n
-
-    :param v: Membrane potential
-    :param exp: Exponential function to use
-    :param use_modified_tau_n: Optional parameter to use the original tau_n which does not work. Defaults to our tau_n
-    :return: tau_n(v)
-    """
-    shift = 60 if use_modified_tau_n else 40
-    return 1 + 19 * exp((-((np.log(1 + 0.05 * (v + shift)) / 0.05) ** 2)) / 300)
-
-
 def __nullcline_v_implicit__(v, parameters, hs, h):
-    """Implicit form of the v nullcline evaluated at h, v, and hs
+    """Implicit form of the v nullcline evaluated at h, v, and hs.
 
     :param v: Membrane potential
     :param h: h gating variable
@@ -166,7 +56,7 @@ def __nullcline_v_implicit__(v, parameters, hs, h):
 
 
 def nullcline_figure(v_range, i_app, stability, hs=1, color_h="black", color_v="grey"):
-    """Helper function for creating nullcline figure
+    """Helper function for creating nullcline figure.
 
     :param v_range: Min and max voltage to use
     :param i_app: Injected current
@@ -193,7 +83,7 @@ def nullcline_figure(v_range, i_app, stability, hs=1, color_h="black", color_v="
 
 
 def nullcline_intersection(nh, nv, v):
-    """Lazy intersection of nullclines
+    """Lazy intersection of nullclines.
 
     This is a helper function for plotting intersections of nullclines. This is not a true intersection
 
