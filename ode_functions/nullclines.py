@@ -35,13 +35,13 @@ def nullcline_v(voltages, i_app, hs=1):
 
     # Find self-consistent h value for every v on the nullcline
     for ix, v in enumerate(voltages):
-        f_solve = partial(__nullcline_v_implicit__, v, parameters, hs)
+        f_solve = partial(nullcline_v_implicit, v, parameters, hs)
         nullcline[ix] = newton(f_solve, x0=0)
 
     return nullcline
 
 
-def __nullcline_v_implicit__(v, parameters, hs, h):
+def nullcline_v_implicit(v, parameters, hs, h):
     """Implicit form of the v nullcline evaluated at h, v, and hs.
 
     :param v: Membrane potential
