@@ -1,3 +1,7 @@
+"""Run figure 6.
+
+run() will create all subplots and save them to ../figures
+"""
 from functools import partial
 
 import matplotlib.pyplot as plt
@@ -9,7 +13,8 @@ from plotting import init_figure, save_fig, set_properties
 
 
 def run():
-    """Top level runner for figure 6
+    """Top level runner for figure 6.
+
     :return: None
     """
     print("Running: Figure 6")
@@ -25,9 +30,9 @@ def run():
 
 
 def figure6(
-    title, channel, version, ampa_scale=0.001, nmda_scale=3.7e-5, extract_time=7500,
+        title, channel, version, ampa_scale=0.001, nmda_scale=3.7e-5, extract_time=7500,
 ):
-    """ Apply a synaptic pulse to the 3d model to determine potential at which depolarization block occurs
+    """Apply a synaptic pulse to the 3d model to determine potential at which depolarization block occurs.
 
     Original values in the paper do not seem to provide an accurate replication manual scaling was used
     (ampa and nmda_scale) to bring them into a working range

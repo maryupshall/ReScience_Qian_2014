@@ -1,9 +1,12 @@
+"""Run figure 3.
+
+run() will create all subplots and save them to ../figures
+"""
 from functools import partial
 
 import PyDSTool
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.integrate import odeint
 from scipy.signal import argrelmax
 from sympy import *
 
@@ -13,7 +16,8 @@ from plotting import init_figure, save_fig, set_properties
 
 
 def run():
-    """Top level runner for figure 3
+    """Top level runner for figure 3.
+
     :return: None
     """
     print("Running: Figure 3")
@@ -37,13 +41,12 @@ def run():
 
 
 def plot_secondary_frequency(times, frequency):
-    """Function to plot instantaneous frequency on a secondary axis
+    """Plot instantaneous frequency on a secondary axis.
 
     :param times: List of times frequency is calculated
     :param frequency: List of frequencies
     :return: None
     """
-
     original_axis = plt.gca()  # keep reference to main axis
 
     # Plot frequency on a secondary axis and set limits to scale values to near original figure
@@ -57,7 +60,7 @@ def plot_secondary_frequency(times, frequency):
 
 
 def figure3a(title, ix=0):
-    """Compute 3d model response into depolarization block for step current input for figure 3A
+    """Compute 3d model response into depolarization block for step current input for figure 3A.
 
     :param title: Plot title (panel label)
     :param ix: Which figure to run: voltage (fig_num=0) or h (fig_num=1)
@@ -110,9 +113,9 @@ def figure3a(title, ix=0):
 
 
 def compute_instantaneous_frequency(
-    voltage, time, voltage_threshold=-40, time_threshold=2000
+        voltage, time, voltage_threshold=-40, time_threshold=2000
 ):
-    """Get per-spike frequency from peak times
+    """Get per-spike frequency from peak times.
 
     :param voltage: Voltage trace time series
     :param time: Time of voltage points
@@ -134,7 +137,7 @@ def compute_instantaneous_frequency(
 
 
 def figure3b(title, panel=0):
-    """Plot nullclines for different model regimes in different panels for 3B
+    """Plot nullclines for different model regimes in different panels for 3B.
 
     :param title: Plot title (panel label)
     :param panel: Which plot to make ix referes to the index if the below i_app_list and hs_list
@@ -163,7 +166,7 @@ def figure3b(title, panel=0):
 
 
 def figure3c(title):
-    """Perform bifurcation analysis of 3D system for 3C
+    """Perform bifurcation analysis of 3D system for 3C.
 
     :param title: Plot title (panel label)
     :return: None
@@ -187,8 +190,9 @@ def figure3c(title):
 
 
 def figure3c_continuation():
-    """Actual continuation analysis for 3C. Contains commands to pyDSTool. Performs some formatting and continuation
+    """Continuation analysis for 3C. Contains commands to pyDSTool.
 
+    Performs some formatting and continuation
     Plotting commands are contained with continuation commands to keep pycont objects together
 
     :return: None
@@ -246,14 +250,14 @@ def figure3c_continuation():
         visible="off", bytype=["P", "RG", "LPC"]
     )  # remove unused points
 
-    # hopefully remove rightmost hopf point - this may not always be H1? todo
+    # hopefully remove rightmost hopf point - this may not always be H1?
     PyCont_3.plot.toggleLabels(visible="off", byname="H1")
 
     plt.gca().set_title("")
 
 
 def figure3d(title):
-    """Explore 3D model response to a faster hs rate for figure 3D
+    """Explore 3D model response to a faster hs rate for figure 3D.
 
     :param title: Plot title (panel label)
     :return: None

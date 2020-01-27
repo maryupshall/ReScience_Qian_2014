@@ -1,3 +1,7 @@
+"""Run figure 4.
+
+run() will create all subplots and save them to ../figures
+"""
 import PyDSTool
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +19,8 @@ from plotting import init_figure, save_fig, set_properties
 
 
 def run():
-    """Top level runner for figure 4
+    """Top level runner for figure 4.
+
     :return: None
     """
     print("Running: Figure 4")
@@ -37,7 +42,7 @@ def run():
 
 
 def figure4a(title, panel=0):
-    """Plot nullclines for different model currents (ix)
+    """Plot nullclines for different model currents (ix).
 
     :param title: Plot title (panel label)
     :param panel: Which plot to make ix refers to the index if the below i_app_list and hs_list
@@ -71,6 +76,9 @@ def figure4a(title, panel=0):
             x_limits=(-40, 5),
             y_limits=(0, 0.15),
         )
+        plt.annotate(
+            "", xy=(-15, 0.05), xytext=(-20, 0.07), arrowprops=dict(arrowstyle="->")
+        )
     else:
         set_properties(
             title,
@@ -80,10 +88,13 @@ def figure4a(title, panel=0):
             x_limits=(-80, 20),
             y_limits=(0, 0.4),
         )
+        plt.annotate(
+            "", xy=(-25, 0.3), xytext=(-20, 0.2), arrowprops=dict(arrowstyle="->")
+        )
 
 
 def figure4b(title, panel=0):
-    """Perform bifurcation analysis of 2D and 3D system for 4B1/2
+    """Perform bifurcation analysis of 2D and 3D system for 4B1/2.
 
     :param title: Plot title (panel label)
     :param panel: Which plot to make, 2D (panel=0) or 3d (panel=1)
@@ -110,8 +121,9 @@ def figure4b(title, panel=0):
 
 
 def figure4b1_continuation():
-    """Actual continuation analysis for 4B1. Contains commands to pyDSTool. Performs some formatting and continuation
+    """Actual continuation analysis for 4B1. Contains commands to pyDSTool.
 
+    Performs some formatting and continuation.
     Plotting commands are contained with continuation commands to keep pycont objects together
 
     :return: None
@@ -169,8 +181,9 @@ def figure4b1_continuation():
 
 
 def figure4b2_continuation():
-    """Actual continuation analysis for 4B2. Contains commands to pyDSTool. Performs some formatting and continuation
+    """Actual continuation analysis for 4B2. Contains commands to pyDSTool.
 
+    Performs some formatting and continuation.
     Plotting commands are contained with continuation commands to keep pycont objects together
 
     :return: None
@@ -231,8 +244,8 @@ def figure4b2_continuation():
     plt.gca().set_title("")
 
 
-def figure4c(title, panel=0):  # todo paper slightly different
-    """Compute true IV curves for 2d and 3d model for figure 4C1/2
+def figure4c(title, panel=0):
+    """Compute true IV curves for 2d and 3d model for figure 4C1/2.
 
     :param title: Plot title (panel label)
     :param panel: Which plot to make, 2D (label=0) or 3d (label=1)

@@ -1,3 +1,7 @@
+"""Run figure 1.
+
+run() will create all subplots and save them to ../figures
+"""
 from functools import partial
 
 import matplotlib.pyplot as plt
@@ -20,7 +24,8 @@ from plotting import init_figure, save_fig, set_properties
 
 
 def run():
-    """Top level runner for figure 1
+    """Top level runner for figure 1.
+
     :return: None
     """
     print("Running: Figure 1")
@@ -45,7 +50,7 @@ def run():
 
 
 def figure1_supplemental_files():
-    """Make supplemental figures using unmodified parameters taken directly from paper data"""
+    """Make supplemental figures using unmodified parameters taken directly from paper data."""
     """
     If we take the paper's value of 5.92 nS and a 1cm^2 patch is equivalent to 5.92/1e6 mS/cm^2
     This gives a plot scaled to almost 0 because this is a negligible effective channel density
@@ -66,7 +71,7 @@ def figure1_supplemental_files():
 
     """
     Similarly to figure 1A they report 9.12nS/cm^2 again we will assume this 9.12nS but 9.12mS/cm^2 additionally if we
-    use a pule width of 3ms as reported we see the current is far too large
+    use a pulse width of 3ms as reported we see the current is far too large
     """
     figure_1b("Supplemental 1B(v1)", g_na=9.12, pulse_width=3)
     save_fig("supp_1B_v1")
@@ -94,19 +99,19 @@ def figure1_supplemental_files():
     Incidentally this looks more like the GABA neuron in their cited Seutin and Engel paper (2010) with a rounded trough
     see figure 7B
     """
-    figure1d("Supplemental 1D2", panel=1, use_modified_tau_n=False)
-    save_fig("supp_1D2")
+    figure1d("Supplemental 1D1", panel=0, use_modified_tau_n=False)
+    save_fig("supp_1D1")
 
 
 def figure_1a(title, g_na=5.92 * 0.514, v_reset=-120):
-    """Compute IV curve for 2d and 3d ode model
+    """Compute IV curve for 2d and 3d ode model.
 
     Based on the paper's reference of Seutin and Engel 2010 we believe what should have happened is Vm is clamped to
     -120 mV then Vm is clamped to a series of voltages: being returned to Vm=-120 each time. For each jump the peak Ina
     is computed
 
     Using the Paper's g_na = 5.92 we find a peak IV at -311 uA/cm^2 whereas the target is ~-160 uA/cm^2 so we rescale
-    g_na to 5.92*160/311 which gives a peak IV curve at ~-160 uA/cm^2     todo: discuss in paper
+    g_na to 5.92*160/311 which gives a peak IV curve at ~-160 uA/cm^2
 
     :param title: Plot title (panel label)
     :param g_na: Optional sodium conductance to use: defaults to working parameter
@@ -146,7 +151,7 @@ def figure_1a(title, g_na=5.92 * 0.514, v_reset=-120):
 
 
 def generate_clamp_pattern_1b(t_max, pulse_width=5):
-    """Helper function to generate the waveform for figure 1b
+    """Generate the stimulus waveform for figure 1b.
 
     Figure 1b requires a clamp waveform with timing requirements that are annoying to generate this function
     encapsulate that operation
@@ -185,7 +190,7 @@ def generate_clamp_pattern_1b(t_max, pulse_width=5):
 
 
 def figure_1b(title, g_na=5.92, pulse_width=5):
-    """Compute the periodic step current response from figure 1B
+    """Compute the periodic step current response from figure 1B.
 
     Clamp to membrane potential to -80 then depolarize and rest the membrane potential to 0mV and -70mV every 100ms with
     5mV pulses to 0mV.
@@ -223,7 +228,7 @@ def figure_1b(title, g_na=5.92, pulse_width=5):
     set_properties(
         title,
         x_label="Time (ms)",
-        y_label="",  # this is actually uA/cm^2 todo discuss in paper
+        y_label="",  # this is actually uA/cm^2
         x_tick=[0, 200, 400],
         y_tick=[-250, -200, 0],
         x_limits=[-50, 450],
@@ -231,7 +236,7 @@ def figure_1b(title, g_na=5.92, pulse_width=5):
 
 
 def figure_1c(title, use_modified_tau_n=True):
-    """Compute limit cycle in n,h phase space for the 5d model and compute the approximation n=f(h) for 1C
+    """Compute limit cycle in n,h phase space for the 5d model and compute the approximation n=f(h) for 1C.
 
     :param title: Plot title (panel label)
     :param use_modified_tau_n: Optional parameter to use the original tau_n which does not work. Defaults to our tau_n
@@ -247,7 +252,7 @@ def figure_1c(title, use_modified_tau_n=True):
 
     # Solve 5d model with appropriate tau_n
     partial_5d = partial(ode_5d, use_modified_tau_n=use_modified_tau_n)
-    t, sol = solve_ode(partial_5d, initial_condition, t_max=4200, dt=0.1, rtol=1e-3)
+    t, sol = solve_ode(partial_5d, initial_condition, t_max=4200, rtol=1e-3)
 
     # Extract h and n and discard the first half due to transient
     ix_half_time = int(len(t) / 2)
@@ -272,20 +277,26 @@ def figure_1c(title, use_modified_tau_n=True):
 
 
 def fit_f_approx(h, n):
+    """Fit the f(h) curve for the approximation to 3D.
+
+    :param h: The h variable for the limit cycle
+    :param n: The n variable for the limit cycle
+    :return: The fit object
+    """
     replicate_fit = np.poly1d(np.polyfit(h, n, deg=3))
     print(replicate_fit)
 
 
 def figure1d(title, panel=0, use_modified_tau_n=True):
-    """Show waveforms for 3d (ix=0) or 5d (ix=1) models
+    """Show waveforms for 5d (ix=0) or 3d (ix=1) models.
 
     :param title: Plot title (panel label)
-    :param panel: Set the model to use 3d/5d (panel=0/1)
+    :param panel: Set the model to use 5d/3d (panel=0/1)
     :param use_modified_tau_n: Optional parameter to use the original tau_n which does not work. Defaults to our tau_n
     :return: None
     """
     # Select appropriate model depending on the panel
-    model = [ode_3d, ode_5d][panel]
+    model = [ode_5d, ode_3d][panel]
 
     # Run the simulation for 4200ms and start at an arbitrary point "close" to the limit cycle
     initial_condition = [-55, 0, 0]
@@ -295,7 +306,7 @@ def figure1d(title, panel=0, use_modified_tau_n=True):
     if model == ode_5d:
         model = partial(ode_5d, use_modified_tau_n=use_modified_tau_n)
 
-    t, sol = solve_ode(model, initial_condition, t_max=4200, dt=0.1, rtol=1e-3)
+    t, sol = solve_ode(model, initial_condition, t_max=4200, rtol=1e-3)
 
     # Throw away the first 1000ms of the simulation
     t_throw_away = np.where(t > 1000)[0][0]
