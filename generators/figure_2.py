@@ -63,6 +63,15 @@ def figure2a(title):
     plt.plot(t, v, "k")
     plt.plot(t, waveform - 70, "grey")
 
+    # Add an inset for ringing between 2000ms and 2100ms
+    inset_axes = plt.gca().inset_axes([0.75, 0.5, 0.2, 0.47])
+    inset_axes.plot(t, v, 'k')
+    inset_axes.set_xlim([2000, 2100])
+    inset_axes.set_ylim([-50, 45])
+    inset_axes.set_xticks([])
+    inset_axes.set_yticks([])
+    plt.gca().indicate_inset_zoom(inset_axes)
+
     # Plot properties
     set_properties(
         title,
