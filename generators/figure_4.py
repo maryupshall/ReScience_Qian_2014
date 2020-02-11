@@ -11,9 +11,9 @@ from ode_functions.diff_eq import (
     ode_2d,
     ode_3d,
     default_parameters,
-    current_voltage_curve,
     resize_initial_condition,
 )
+from ode_functions.experiment import current_voltage_curve
 from ode_functions.nullclines import nullcline_figure
 from plotting import init_figure, save_fig, set_properties
 
@@ -107,7 +107,7 @@ def figure4b(title, panel=0):
         x_tick = [-6, 0, 6]
     else:
         figure4b2_continuation()
-        x_label = "I$_{app}$($\mu$A/cm$^2$)"
+        x_label = r"I$_{app}$($\mu$A/cm$^2$)"
         x_tick = [-0.1, 0, 0.2, 0.1]
 
     set_properties(
@@ -271,7 +271,7 @@ def figure4c(title, panel=0):
         set_properties(
             title,
             x_label="V (mV)",
-            y_label="I$_{stim}$($\mu$A/cm$^2$)",
+            y_label=r"I$_{stim}$($\mu$A/cm$^2$)",
             x_tick=[-80, -40],
             y_tick=[-5, 0, 5],
             x_limits=(-100, -20),

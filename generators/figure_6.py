@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from ode_functions.current import nmda_current, ampa_current
-from ode_functions.diff_eq import pulse, ode_3d
+from ode_functions.diff_eq import ode_3d
+from ode_functions.experiment import pulse
 from plotting import init_figure, save_fig, set_properties
 
 

@@ -9,17 +9,15 @@ import numpy as np
 
 from ode_functions.current import sodium_current
 from ode_functions.diff_eq import (
-    steady_state_when_clamped,
     ode_3d,
     ode_2d,
     resize_initial_condition,
-    current_voltage_curve,
-    pulse,
     default_parameters,
     ode_5d,
     solve_ode,
     f_approx,
 )
+from ode_functions.experiment import pulse, steady_state_when_clamped, current_voltage_curve
 from plotting import init_figure, save_fig, set_properties
 
 
@@ -144,7 +142,7 @@ def figure_1a(title, g_na=5.92 * 0.514, v_reset=-120):
     set_properties(
         title,
         x_label="V (mV)",
-        y_label="I$_{Na}$($\mu$A/cm$^2$)",
+        y_label=r"I$_{Na}$($\mu$A/cm$^2$)",
         x_tick=[-80, -40, 0, 40],
         y_tick=[-160, 0],
     )

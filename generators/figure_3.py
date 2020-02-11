@@ -10,7 +10,8 @@ import numpy as np
 from scipy.signal import argrelmax
 from sympy import *
 
-from ode_functions.diff_eq import ode_3d, default_parameters, hs_clamp, pulse, solve_ode
+from ode_functions.diff_eq import ode_3d, default_parameters, solve_ode
+from ode_functions.experiment import hs_clamp, pulse
 from ode_functions.nullclines import nullcline_figure
 from plotting import init_figure, save_fig, set_properties
 

@@ -4,7 +4,8 @@ run() will create all subplots and save them to ../figures
 """
 import matplotlib.pyplot as plt
 
-from ode_functions.diff_eq import ode_2d, pulse
+from ode_functions.diff_eq import ode_2d
+from ode_functions.experiment import pulse
 from ode_functions.nullclines import nullcline_figure
 from plotting import init_figure, save_fig, set_properties
 
