@@ -138,7 +138,7 @@ def figure_1a(title, g_na=5.92 * 0.514, v_reset=-120):
         plt.plot(voltage, current, color=color, linestyle=linestyle)
 
     # plot settings
-    plt.legend(["3D", "2D"], loc="center left", bbox_to_anchor=(0.3, 1.05))
+    plt.legend(["3D", "2D"], loc="center left", bbox_to_anchor=(0.4, 1.05))
     set_properties(
         title,
         x_label="V (mV)",
