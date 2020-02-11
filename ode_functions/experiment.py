@@ -107,7 +107,7 @@ def pulse(model, parameter_name, temporal_pattern, t_max, ic, **kwargs):
     For example injecting a dc-current at t=1000
 
     :param model: ODE function to apply pulse to
-    :param parameter_name: Parameter to
+    :param parameter_name: Name of parameter to update during pulse
     :param temporal_pattern: A dictionary of time:value pairs {0: 0, 1000:1} will set param to 0 at t=0 and 1 and t=1000
     :param t_max: Time to end the simulation at
     :param ic: Simulation initial condition
