@@ -16,8 +16,14 @@ from ode_functions.diff_eq import (
     ode_5d,
     solve_ode,
     f_approx,
-    ureg, mS_PER_CM2)
-from ode_functions.experiment import pulse, steady_state_when_clamped, current_voltage_curve
+    ureg,
+    mS_PER_CM2,
+)
+from ode_functions.experiment import (
+    pulse,
+    steady_state_when_clamped,
+    current_voltage_curve,
+)
 from plotting import init_figure, save_fig, set_properties
 
 

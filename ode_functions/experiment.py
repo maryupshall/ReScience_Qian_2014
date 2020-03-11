@@ -1,6 +1,7 @@
 """Module with helpers for performing experimental manipulations.
 
-Manipulations include clamping, sequence of discrete pulses (of current or 'variable')"""
+Manipulations include clamping, sequence of discrete pulses (of current or 'variable')
+"""
 import numpy as np
 import sympy
 
@@ -174,7 +175,9 @@ def compute_iv_current(solution, parameters, follow):
     """
     striped_parameters = {k: strip_dimension(v) for k, v in parameters.items()}
     if follow:
-        return -total_current(solution.T, striped_parameters)[-1]  # [-1] give steady state
+        return -total_current(solution.T, striped_parameters)[
+            -1
+        ]  # [-1] give steady state
     else:
         i_na = sodium_current(solution.T, striped_parameters)
         pk = np.argmax(np.abs(i_na))  # intermediate pk allows for sign preservation
@@ -202,7 +205,9 @@ def current_voltage_curve(model, clamp_range, t_max, ic, follow=False, **kwargs)
     parameters = default_parameters(**kwargs)
     voltage = np.arange(*map(strip_dimension, clamp_range))
     current = np.zeros(voltage.shape)
-    state = np.array([list(map(strip_dimension, ic))])  # inital state is ic; array([ic]) gives a 2d array
+    state = np.array(
+        [list(map(strip_dimension, ic))]
+    )  # inital state is ic; array([ic]) gives a 2d array
 
     # Update model inital state according to IV curve type, run voltage clamp and save I(V)
     for ix, v in enumerate(voltage):

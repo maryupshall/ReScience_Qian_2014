@@ -114,9 +114,7 @@ def figure3a(title, ix=0):
     )
 
 
-def compute_instantaneous_frequency(
-        voltage, time, time_threshold=2000
-):
+def compute_instantaneous_frequency(voltage, time, time_threshold=2000):
     """Get per-spike frequency from peak times.
 
     :param voltage: Voltage trace time series
@@ -145,11 +143,13 @@ def figure3b(title, panel=0):
     :return: None
     """
     # different panels (ix) use a different parameters: set the appropriate one
-    i_app = ([0, 0.16, 0.16, 0.16]*uA_PER_CM2)[panel]
+    i_app = ([0, 0.16, 0.16, 0.16] * uA_PER_CM2)[panel]
     hs = [0.6, 0.6, 0.2, 0.05][panel]
 
     s = panel == 3  # 4th panel only is stable
-    nullcline_figure(v_range=[-90*ureg.mV, 50*ureg.mV], i_app=i_app, stability=s, hs=hs)
+    nullcline_figure(
+        v_range=[-90 * ureg.mV, 50 * ureg.mV], i_app=i_app, stability=s, hs=hs
+    )
 
     y_label = "h" if panel == 0 else ""
     y_ticklabel = None if panel == 0 else []
@@ -174,7 +174,7 @@ def figure3c(title):
     """
     # Compute contunuation and plot bifurcation diagram
     figure3c_continuation()
-    ic = [-60*ureg.mV, 0, 1]
+    ic = [-60 * ureg.mV, 0, 1]
 
     # solve system and overlay hs,v trajectory - zorder plotting behind bifuraction diagram
     t, sol = solve_ode(model=ode_3d, ic=ic, t_max=10000, i_app=0.16)
@@ -199,7 +199,7 @@ def figure3c_continuation():
     :return: None
     """
     # Set parameters and convert to symbolic representation
-    parameters = default_parameters(i_app=0.16*uA_PER_CM2)
+    parameters = default_parameters(i_app=0.16 * uA_PER_CM2)
     striped_parameters = {k: strip_dimension(v) for k, v in parameters.items()}
 
     v, h, h_s = symbols("v h h_s")
@@ -266,8 +266,8 @@ def figure3d(title):
     :return: None
     """
     # Compute a 10000ms simulation with i_app=0 at t=0 and then i_app=0.16 at t=2000
-    pattern = {0*ureg.ms: 0*uA_PER_CM2, 2000*ureg.ms: 0.16*uA_PER_CM2}
-    ic = [-65*ureg.mV, 1, 1]
+    pattern = {0 * ureg.ms: 0 * uA_PER_CM2, 2000 * ureg.ms: 0.16 * uA_PER_CM2}
+    ic = [-65 * ureg.mV, 1, 1]
 
     # Create curried function with partial to hide the scale kwargs and solve
     partial_ode = partial(ode_3d, scale=2)

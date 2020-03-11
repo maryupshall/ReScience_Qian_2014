@@ -83,9 +83,9 @@ def total_current(solution, parameters, exp=np.exp):
     :return: Sodium current
     """
     return (
-            -leak_current(solution, parameters)
-            - sodium_current(solution, parameters, exp=exp)
-            - potassium_current(solution, parameters)
+        -leak_current(solution, parameters)
+        - sodium_current(solution, parameters, exp=exp)
+        - potassium_current(solution, parameters)
     )
 
 

@@ -32,7 +32,12 @@ def run():
 
 
 def figure6(
-        title, channel, version, ampa_scale=0.001, nmda_scale=3.7e-5, extract_time=7500 * ureg.ms,
+    title,
+    channel,
+    version,
+    ampa_scale=0.001,
+    nmda_scale=3.7e-5,
+    extract_time=7500 * ureg.ms,
 ):
     """Apply a synaptic pulse to the 3d model to determine potential at which depolarization block occurs.
 
@@ -60,11 +65,11 @@ def figure6(
     on_value = all_parameters[channel][version]
     parameter_name = "i_app" if channel == "i_app" else "g_syn"
     pattern = {
-        0*ureg.ms: 0*on_value.units,  # off at t=0
-        2000*ureg.ms: on_value,  # on at t=2000
-        8000*ureg.ms: 0*on_value.units,  # off at t=8000
+        0 * ureg.ms: 0 * on_value.units,  # off at t=0
+        2000 * ureg.ms: on_value,  # on at t=2000
+        8000 * ureg.ms: 0 * on_value.units,  # off at t=8000
     }
-    ic = [-65*ureg.mV, 1, 1]
+    ic = [-65 * ureg.mV, 1, 1]
 
     # Create a curried ode_3d to take the synapse and solve it
     synapse_model = partial(ode_3d, synapse=channel_function)
@@ -72,7 +77,7 @@ def figure6(
         model=synapse_model,
         parameter_name=parameter_name,
         temporal_pattern=pattern,
-        t_max=10000*ureg.mV,
+        t_max=10000 * ureg.mV,
         ic=ic,
     )
 

@@ -84,7 +84,6 @@ def default_parameters(i_app=0 * uA_PER_CM2, g_na=8 * mS_PER_CM2, g_syn=0 * mS_P
     :param g_syn: Default synaptic conductance - defaults to 0 if not specified
     :return: Default parameters
     """
-
     g_k = 0.6 * mS_PER_CM2
     e_na = 60 * ureg.mV
     e_k = -85 * ureg.mV
@@ -127,7 +126,9 @@ def solve_ode(model, ic, t_max, additional_params=(), dt=0.1, rtol=None, **kwarg
     striped_parameters = {k: strip_dimension(v) for k, v in parameters.items()}
 
     # Solve and return solution
-    solution = odeint(model, ic, t, args=(striped_parameters,) + additional_params, rtol=rtol)
+    solution = odeint(
+        model, ic, t, args=(striped_parameters,) + additional_params, rtol=rtol
+    )
     return t, solution
 
 
