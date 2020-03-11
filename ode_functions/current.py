@@ -7,6 +7,7 @@ AMPA/NMDA current
 import numpy as np
 
 from ode_functions.gating import f_approx, m_inf
+from units import strip_dimension
 
 
 def leak_current(solution, parameters):
@@ -39,8 +40,8 @@ def sodium_current(solution, parameters, exp=np.exp):
     :return: Sodium current
     """
     # Extract sodium current parameters
-    g_na = parameters["g_na"]
-    e_na = parameters["e_na"]
+    g_na = strip_dimension(parameters["g_na"])
+    e_na = strip_dimension(parameters["e_na"])
 
     # Extract or assign variables v,h, and hs
     hs = 1 if len(solution) == 2 else solution[2]

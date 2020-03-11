@@ -6,6 +6,7 @@ import sympy
 
 from ode_functions.current import total_current, sodium_current
 from ode_functions.diff_eq import ode_3d, solve_ode, default_parameters, update_ic
+from units import strip_dimension
 
 
 def voltage_clamp(state, _, parameters, func):
@@ -127,6 +128,7 @@ def pulse(model, parameter_name, temporal_pattern, t_max, ic, **kwargs):
         parameters[parameter_name] = value
 
         #  generate new time steps and save
+        t0, t1, value = strip_dimension(t0), strip_dimension(t1), strip_dimension(value)
         t = np.arange(t0, t1, 0.1)
         t_solved = np.concatenate((t_solved, t))
 
@@ -170,10 +172,11 @@ def compute_iv_current(solution, parameters, follow):
     :param follow: Follow mode or peak mode (True/False)
     :return: I(V)
     """
+    striped_parameters = {k: strip_dimension(v) for k, v in parameters.items()}
     if follow:
-        return -total_current(solution.T, parameters)[-1]  # [-1] give steady state
+        return -total_current(solution.T, striped_parameters)[-1]  # [-1] give steady state
     else:
-        i_na = sodium_current(solution.T, parameters)
+        i_na = sodium_current(solution.T, striped_parameters)
         pk = np.argmax(np.abs(i_na))  # intermediate pk allows for sign preservation
         return i_na[pk]
 
@@ -197,9 +200,9 @@ def current_voltage_curve(model, clamp_range, t_max, ic, follow=False, **kwargs)
     """
     # Initialize IV curve
     parameters = default_parameters(**kwargs)
-    voltage = np.arange(*clamp_range)
+    voltage = np.arange(*map(strip_dimension, clamp_range))
     current = np.zeros(voltage.shape)
-    state = np.array([ic])  # inital state is ic; array([ic]) gives a 2d array
+    state = np.array([list(map(strip_dimension, ic))])  # inital state is ic; array([ic]) gives a 2d array
 
     # Update model inital state according to IV curve type, run voltage clamp and save I(V)
     for ix, v in enumerate(voltage):

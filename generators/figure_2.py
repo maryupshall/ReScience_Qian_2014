@@ -8,6 +8,7 @@ from ode_functions.diff_eq import ode_2d
 from ode_functions.experiment import pulse
 from ode_functions.nullclines import nullcline_figure
 from plotting import init_figure, save_fig, set_properties
+from units import ureg, uA_PER_CM2
 
 
 def run():
@@ -35,9 +36,9 @@ def figure2a(title):
     :return: None
     """
     # Compute a 3000ms simulation with i_app=0 at t=0 and then i_app=3.5 at t=2000
-    pattern = {0: 0, 2000: 3.5}
-    end_time = 3000
-    initial_condition = [-35, 1]
+    pattern = {0 * ureg.ms: 0 * uA_PER_CM2, 2000 * ureg.ms: 3.5 * uA_PER_CM2}
+    end_time = 3000 * ureg.ms
+    initial_condition = [-35 * ureg.mV, 1]
 
     # Solve ode_2d for a current pulse with above parameters
     solution, t, waveform = pulse(
@@ -92,11 +93,11 @@ def figure2b(title, panel=0):
     :return: None
     """
     # Select appropriate current regime depending on panel
-    i_app = [0, 3.5][panel]
+    i_app = [0 * uA_PER_CM2, 3.5 * uA_PER_CM2][panel]
 
     # Compute nullcline and set the stability
     s = panel == 1  # panel==1 means 2nd panel is stable
-    nullcline_figure(v_range=[-90, 50], i_app=i_app, stability=s)
+    nullcline_figure(v_range=[-90 * ureg.mV, 50 * ureg.mV], i_app=i_app, stability=s)
 
     # Plot Properties
     y_label = "h" if panel == 0 else ""

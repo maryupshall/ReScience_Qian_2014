@@ -11,6 +11,7 @@ from ode_functions.current import nmda_current, ampa_current
 from ode_functions.diff_eq import ode_3d
 from ode_functions.experiment import pulse
 from plotting import init_figure, save_fig, set_properties
+from units import ureg, mS_PER_CM2, uA_PER_CM2, strip_dimension
 
 
 def run():
@@ -31,7 +32,7 @@ def run():
 
 
 def figure6(
-        title, channel, version, ampa_scale=0.001, nmda_scale=3.7e-5, extract_time=7500,
+        title, channel, version, ampa_scale=0.001, nmda_scale=3.7e-5, extract_time=7500 * ureg.ms,
 ):
     """Apply a synaptic pulse to the 3d model to determine potential at which depolarization block occurs.
 
@@ -49,9 +50,9 @@ def figure6(
     # Containers for the function and parameter values for the different channels
     channel_types = {"nmda": nmda_current, "ampa": ampa_current, "i_app": None}
     all_parameters = {
-        "nmda": [60 * nmda_scale, 60 * nmda_scale],
-        "ampa": [2.3 * ampa_scale, 7 * ampa_scale],
-        "i_app": [0.16, 0.32],
+        "nmda": [60 * nmda_scale, 60 * nmda_scale] * mS_PER_CM2,
+        "ampa": [2.3 * ampa_scale, 7 * ampa_scale] * mS_PER_CM2,
+        "i_app": [0.16, 0.32] * uA_PER_CM2,
     }
 
     # Initialize and set properties
@@ -59,11 +60,11 @@ def figure6(
     on_value = all_parameters[channel][version]
     parameter_name = "i_app" if channel == "i_app" else "g_syn"
     pattern = {
-        0: 0,  # off at t=0
-        2000: on_value,  # on at t=2000
-        8000: 0,  # off at t=8000
+        0*ureg.ms: 0*on_value.units,  # off at t=0
+        2000*ureg.ms: on_value,  # on at t=2000
+        8000*ureg.ms: 0*on_value.units,  # off at t=8000
     }
-    ic = [-65, 1, 1]
+    ic = [-65*ureg.mV, 1, 1]
 
     # Create a curried ode_3d to take the synapse and solve it
     synapse_model = partial(ode_3d, synapse=channel_function)
@@ -71,14 +72,14 @@ def figure6(
         model=synapse_model,
         parameter_name=parameter_name,
         temporal_pattern=pattern,
-        t_max=10000,
+        t_max=10000*ureg.mV,
         ic=ic,
     )
 
     # Plot voltage trace and extract block potential
     plt.plot(t_solved, solution[:, 0], "k")
 
-    extract_ix = np.where(t_solved > extract_time)[0][0]
+    extract_ix = np.where(t_solved > strip_dimension(extract_time))[0][0]
     block_potential = solution[extract_ix, 0]
     plt.text(
         7500,

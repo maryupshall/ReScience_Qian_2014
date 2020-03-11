@@ -6,6 +6,7 @@ from scipy.integrate import odeint
 
 from ode_functions.current import total_current
 from ode_functions.gating import *
+from units import uA_PER_CM2, mS_PER_CM2, ureg, strip_dimension
 
 
 def ode_2d(state, _, parameters, exp=np.exp):
@@ -75,7 +76,7 @@ def ode_5d(state, _, parameters, use_modified_tau_n=True):
     return [dv, dh, dhs, dm, dn]
 
 
-def default_parameters(i_app=0, g_na=8, g_syn=0):
+def default_parameters(i_app=0 * uA_PER_CM2, g_na=8 * mS_PER_CM2, g_syn=0 * mS_PER_CM2):
     """Generate a dictionary for the default parameters.
 
     :param i_app: Applied current - defaults to 0 if not specified
@@ -83,11 +84,12 @@ def default_parameters(i_app=0, g_na=8, g_syn=0):
     :param g_syn: Default synaptic conductance - defaults to 0 if not specified
     :return: Default parameters
     """
-    g_k = 0.6  # mS/cm^2
-    e_na = 60  # mV
-    e_k = -85  # mV
-    e_l = -60  # mV
-    g_l = 0.013  # mS/cm^2
+
+    g_k = 0.6 * mS_PER_CM2
+    e_na = 60 * ureg.mV
+    e_k = -85 * ureg.mV
+    e_l = -60 * ureg.mV
+    g_l = 0.013 * mS_PER_CM2
 
     params = {
         "g_k": g_k,
@@ -98,7 +100,7 @@ def default_parameters(i_app=0, g_na=8, g_syn=0):
         "g_l": g_l,
         "i_app": i_app,
         "g_syn": g_syn,
-        "e_syn": 0,
+        "e_syn": 0 * ureg.mV,
     }
 
     return params
@@ -118,10 +120,14 @@ def solve_ode(model, ic, t_max, additional_params=(), dt=0.1, rtol=None, **kwarg
     """
     # Initialize time and paraters
     parameters = default_parameters(**kwargs)
+    t_max = strip_dimension(t_max)
     t = np.arange(0, t_max, dt)
 
+    ic = list(map(strip_dimension, ic))
+    striped_parameters = {k: strip_dimension(v) for k, v in parameters.items()}
+
     # Solve and return solution
-    solution = odeint(model, ic, t, args=(parameters,) + additional_params, rtol=rtol)
+    solution = odeint(model, ic, t, args=(striped_parameters,) + additional_params, rtol=rtol)
     return t, solution
 
 

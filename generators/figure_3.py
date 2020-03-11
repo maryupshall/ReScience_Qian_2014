@@ -14,6 +14,7 @@ from ode_functions.diff_eq import ode_3d, default_parameters, solve_ode
 from ode_functions.experiment import hs_clamp, pulse
 from ode_functions.nullclines import nullcline_figure
 from plotting import init_figure, save_fig, set_properties
+from units import ureg, uA_PER_CM2, strip_dimension
 
 
 def run():
@@ -68,15 +69,15 @@ def figure3a(title, ix=0):
     :return: None
     """
     # Compute a 6000ms simulation with i_app=0 at t=0 and then i_app=0.16 at t=2000
-    pattern = {0: 0, 2000: 0.16}
-    ic = [-55, 0, 0]
+    pattern = {0 * ureg.ms: 0 * uA_PER_CM2, 2000 * ureg.ms: 0.16 * uA_PER_CM2}
+    ic = [-55 * ureg.mV, 0, 0]
 
     # Solve 3d model for above parameters and compute frequency
     solution, t_solved, stimulus = pulse(
         model=ode_3d,
         parameter_name="i_app",
         temporal_pattern=pattern,
-        t_max=6000,
+        t_max=6000 * ureg.ms,
         ic=ic,
     )
     t_spike, f_spike = compute_instantaneous_frequency(solution[:, 0], t_solved)
@@ -114,19 +115,18 @@ def figure3a(title, ix=0):
 
 
 def compute_instantaneous_frequency(
-        voltage, time, voltage_threshold=-40, time_threshold=2000
+        voltage, time, time_threshold=2000
 ):
     """Get per-spike frequency from peak times.
 
     :param voltage: Voltage trace time series
     :param time: Time of voltage points
-    :param voltage_threshold: Set threshold s.t. peaks below threshold are excluded
     :param time_threshold: Only return spikes after this
     :return: Spike times and frequency
     """
     # Find peaks and filter spikelets if any
     spike_index = argrelmax(voltage)[0]
-    spike_index = spike_index[voltage[spike_index] > voltage_threshold]
+    spike_index = spike_index[voltage[spike_index] > -40]
     # Restrict spikes to after interesting time
     spike_index = spike_index[time[spike_index] > time_threshold]
 
@@ -145,11 +145,11 @@ def figure3b(title, panel=0):
     :return: None
     """
     # different panels (ix) use a different parameters: set the appropriate one
-    i_app = [0, 0.16, 0.16, 0.16][panel]
+    i_app = ([0, 0.16, 0.16, 0.16]*uA_PER_CM2)[panel]
     hs = [0.6, 0.6, 0.2, 0.05][panel]
 
     s = panel == 3  # 4th panel only is stable
-    nullcline_figure(v_range=[-90, 50], i_app=i_app, stability=s, hs=hs)
+    nullcline_figure(v_range=[-90*ureg.mV, 50*ureg.mV], i_app=i_app, stability=s, hs=hs)
 
     y_label = "h" if panel == 0 else ""
     y_ticklabel = None if panel == 0 else []
@@ -174,7 +174,7 @@ def figure3c(title):
     """
     # Compute contunuation and plot bifurcation diagram
     figure3c_continuation()
-    ic = [-60, 0, 1]
+    ic = [-60*ureg.mV, 0, 1]
 
     # solve system and overlay hs,v trajectory - zorder plotting behind bifuraction diagram
     t, sol = solve_ode(model=ode_3d, ic=ic, t_max=10000, i_app=0.16)
@@ -199,10 +199,12 @@ def figure3c_continuation():
     :return: None
     """
     # Set parameters and convert to symbolic representation
-    parameters = default_parameters(i_app=0.16)
+    parameters = default_parameters(i_app=0.16*uA_PER_CM2)
+    striped_parameters = {k: strip_dimension(v) for k, v in parameters.items()}
+
     v, h, h_s = symbols("v h h_s")
     dydt = hs_clamp(
-        [v, h, h_s], 0, parameters
+        [v, h, h_s], 0, striped_parameters
     )  # returns a symbolic expression since variables are symbolic
 
     DSargs_3 = PyDSTool.args(name="bifn_3")
@@ -264,8 +266,8 @@ def figure3d(title):
     :return: None
     """
     # Compute a 10000ms simulation with i_app=0 at t=0 and then i_app=0.16 at t=2000
-    pattern = {0: 0, 2000: 0.16}
-    ic = [-65, 1, 1]
+    pattern = {0*ureg.ms: 0*uA_PER_CM2, 2000*ureg.ms: 0.16*uA_PER_CM2}
+    ic = [-65*ureg.mV, 1, 1]
 
     # Create curried function with partial to hide the scale kwargs and solve
     partial_ode = partial(ode_3d, scale=2)
@@ -291,3 +293,7 @@ def figure3d(title):
         x_tick=[0, 5000, 10000],
         x_limits=(0, 10000),
     )
+
+
+if __name__ == "__main__":
+    run()
