@@ -9,16 +9,20 @@ import numpy as np
 
 from ode_functions.current import sodium_current
 from ode_functions.diff_eq import (
-    steady_state_when_clamped,
     ode_3d,
     ode_2d,
     resize_initial_condition,
-    current_voltage_curve,
-    pulse,
     default_parameters,
     ode_5d,
     solve_ode,
     f_approx,
+    ureg,
+    mS_PER_CM2,
+)
+from ode_functions.experiment import (
+    pulse,
+    steady_state_when_clamped,
+    current_voltage_curve,
 )
 from plotting import init_figure, save_fig, set_properties
 
@@ -55,7 +59,7 @@ def figure1_supplemental_files():
     If we take the paper's value of 5.92 nS and a 1cm^2 patch is equivalent to 5.92/1e6 mS/cm^2
     This gives a plot scaled to almost 0 because this is a negligible effective channel density
     """
-    paper_value = 5.92 / 1e6  # nS/cm^2 in mS/cm^2
+    paper_value = 5.92 * ureg.nanomho / ureg.cm ** 2  # nS/cm^2 in mS/cm^2
     figure_1a("Supplemental 1A(v1)", g_na=paper_value)
     plt.ylim([-1, 1])  # reset to make line visible
     save_fig("supp_1A_v1")
@@ -65,7 +69,7 @@ def figure1_supplemental_files():
     The "onset of current" at ~-50 mV and the reversal potential at ~60mV is preserved
     """
     figure_1a(
-        "Supplemental 1A(v2)", g_na=5.92
+        "Supplemental 1A(v2)", g_na=5.92 * mS_PER_CM2
     )  # assume units incorrect and meant mS/cm^2
     save_fig("supp_1A_v2")
 
@@ -73,18 +77,18 @@ def figure1_supplemental_files():
     Similarly to figure 1A they report 9.12nS/cm^2 again we will assume this 9.12nS but 9.12mS/cm^2 additionally if we
     use a pulse width of 3ms as reported we see the current is far too large
     """
-    figure_1b("Supplemental 1B(v1)", g_na=9.12, pulse_width=3)
+    figure_1b("Supplemental 1B(v1)", g_na=9.12 * mS_PER_CM2, pulse_width=3 * ureg.ms)
     save_fig("supp_1B_v1")
 
     """
     If we adjust g_na and leave the pulse width at 3ms we get an appropriate current scale but the current does not 
     decay enough.
     """
-    figure_1b("Supplemental 1B(v2)", pulse_width=3)
+    figure_1b("Supplemental 1B(v2)", pulse_width=3 * ureg.ms)
     save_fig("supp_1B_v2")
 
     # If we leave g_na at 9.12mS/cm^2 and set the pulse width to 5ms we still see a current that's ~2x too large
-    figure_1b("Supplemental 1B(v3)", g_na=9.12)
+    figure_1b("Supplemental 1B(v3)", g_na=9.12 * mS_PER_CM2)
     save_fig("supp_1B_v3")
 
     """
@@ -103,7 +107,7 @@ def figure1_supplemental_files():
     save_fig("supp_1D1")
 
 
-def figure_1a(title, g_na=5.92 * 0.514, v_reset=-120):
+def figure_1a(title, g_na=5.92 * mS_PER_CM2 * 0.514, v_reset=-120 * ureg.mV):
     """Compute IV curve for 2d and 3d ode model.
 
     Based on the paper's reference of Seutin and Engel 2010 we believe what should have happened is Vm is clamped to
@@ -131,8 +135,8 @@ def figure_1a(title, g_na=5.92 * 0.514, v_reset=-120):
         # compute IV curve
         current, voltage = current_voltage_curve(
             model=model,
-            clamp_range=[-90, 60],
-            t_max=500,
+            clamp_range=[-90 * ureg.mV, 60 * ureg.mV],
+            t_max=500 * ureg.ms,
             ic=initial_condition,
             g_na=g_na,
         )
@@ -140,17 +144,17 @@ def figure_1a(title, g_na=5.92 * 0.514, v_reset=-120):
         plt.plot(voltage, current, color=color, linestyle=linestyle)
 
     # plot settings
-    plt.legend(["3D", "2D"], loc="center left", bbox_to_anchor=(0.3, 1.05))
+    plt.legend(["3D", "2D"], loc="center left", bbox_to_anchor=(0.4, 1.05))
     set_properties(
         title,
         x_label="V (mV)",
-        y_label="I$_{Na}$($\mu$A/cm$^2$)",
+        y_label=r"I$_{Na}$($\mu$A/cm$^2$)",
         x_tick=[-80, -40, 0, 40],
         y_tick=[-160, 0],
     )
 
 
-def generate_clamp_pattern_1b(t_max, pulse_width=5):
+def generate_clamp_pattern_1b(t_max, pulse_width=5 * ureg.ms):
     """Generate the stimulus waveform for figure 1b.
 
     Figure 1b requires a clamp waveform with timing requirements that are annoying to generate this function
@@ -161,12 +165,12 @@ def generate_clamp_pattern_1b(t_max, pulse_width=5):
     :return: Returns the clamp pattern in the "pattern" format
     """
     # make pulses 100ms and the pulse transitions from between -70mV to 0mV
-    pulse_period = 100
-    clamp_potential = {"low": -70, "high": 0}
+    pulse_period = 100 * ureg.ms
+    clamp_potential = {"low": -70 * ureg.mV, "high": 0 * ureg.mV}
 
     # initialize clamped low and end current regime at t=0
     segment_start = [-pulse_period]
-    segment_end = [0]
+    segment_end = [0 * ureg.ms]
     voltage_sequence = [clamp_potential["low"]]
     clamped_high = False
     # Generate start and end times for the waveform until the simulation end is hit
@@ -189,7 +193,7 @@ def generate_clamp_pattern_1b(t_max, pulse_width=5):
     return {k: v for k, v in zip(segment_start, voltage_sequence)}
 
 
-def figure_1b(title, g_na=5.92, pulse_width=5):
+def figure_1b(title, g_na=5.92 * mS_PER_CM2, pulse_width=5 * ureg.ms):
     """Compute the periodic step current response from figure 1B.
 
     Clamp to membrane potential to -80 then depolarize and rest the membrane potential to 0mV and -70mV every 100ms with
@@ -204,9 +208,9 @@ def figure_1b(title, g_na=5.92, pulse_width=5):
     :return: None
     """
     # Create a 500ms simulation clamped at -80 which then goes through the 1b clamp pattern
-    t_max = 500
+    t_max = 500 * ureg.ms
     pattern = generate_clamp_pattern_1b(t_max, pulse_width=pulse_width)
-    initial_condition = steady_state_when_clamped(v_clamp=-80)
+    initial_condition = steady_state_when_clamped(v_clamp=-80 * ureg.mV)
 
     # Impose v_clamp according to pattern
     solution, time, waveform = pulse(
@@ -243,7 +247,7 @@ def figure_1c(title, use_modified_tau_n=True):
     :return: None
     """
     initial_condition = [
-        -55,
+        -55 * ureg.mV,
         0,
         0,
         0,
@@ -252,7 +256,7 @@ def figure_1c(title, use_modified_tau_n=True):
 
     # Solve 5d model with appropriate tau_n
     partial_5d = partial(ode_5d, use_modified_tau_n=use_modified_tau_n)
-    t, sol = solve_ode(partial_5d, initial_condition, t_max=4200, rtol=1e-3)
+    t, sol = solve_ode(partial_5d, initial_condition, t_max=4200 * ureg.ms, rtol=1e-3)
 
     # Extract h and n and discard the first half due to transient
     ix_half_time = int(len(t) / 2)
@@ -299,14 +303,14 @@ def figure1d(title, panel=0, use_modified_tau_n=True):
     model = [ode_5d, ode_3d][panel]
 
     # Run the simulation for 4200ms and start at an arbitrary point "close" to the limit cycle
-    initial_condition = [-55, 0, 0]
+    initial_condition = [-55 * ureg.mV, 0, 0]
     initial_condition = resize_initial_condition(initial_condition, model, fill=0)
 
     # Solve 5d model with appropriate tau_n
     if model == ode_5d:
         model = partial(ode_5d, use_modified_tau_n=use_modified_tau_n)
 
-    t, sol = solve_ode(model, initial_condition, t_max=4200, rtol=1e-3)
+    t, sol = solve_ode(model, initial_condition, t_max=4200 * ureg.ms, rtol=1e-3)
 
     # Throw away the first 1000ms of the simulation
     t_throw_away = np.where(t > 1000)[0][0]
@@ -329,3 +333,7 @@ def figure1d(title, panel=0, use_modified_tau_n=True):
         x_tick=[0, 1000, 2000, 3000],
         x_limits=[0, 3000],
     )
+
+
+if __name__ == "__main__":
+    run()

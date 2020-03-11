@@ -7,6 +7,7 @@ from scipy.optimize import newton
 
 from ode_functions.current import total_current
 from ode_functions.diff_eq import h_inf, default_parameters
+from units import strip_dimension
 
 
 def nullcline_h(v):
@@ -32,10 +33,11 @@ def nullcline_v(voltages, i_app, hs=1):
     """
     nullcline = np.zeros((len(voltages),))
     parameters = default_parameters(i_app=i_app)
+    striped_parameters = {k: strip_dimension(v) for k, v in parameters.items()}
 
     # Find self-consistent h value for every v on the nullcline
     for ix, v in enumerate(voltages):
-        f_solve = partial(nullcline_v_implicit, v, parameters, hs)
+        f_solve = partial(nullcline_v_implicit, v, striped_parameters, hs)
         nullcline[ix] = newton(f_solve, x0=0)
 
     return nullcline
@@ -67,7 +69,7 @@ def nullcline_figure(v_range, i_app, stability, hs=1, color_h="black", color_v="
     :param color_v: Optional color for the v_nullcline color: defaults to grey
     :return: None
     """
-    voltages = np.arange(*v_range)
+    voltages = np.arange(*map(strip_dimension, v_range))
 
     # Compute nullclines
     nh = nullcline_h(voltages)

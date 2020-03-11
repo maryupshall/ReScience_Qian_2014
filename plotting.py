@@ -1,10 +1,11 @@
+"""Common functions for simplifying plotting."""
 from os.path import join
 
 import matplotlib.pyplot as plt
 
 
 def init_figure(size, dpi=96):
-    """Create a figure of set size
+    """Create a figure of set size.
 
     :param size: (l,w) in cm of the figure
     :param dpi: Display resolution (defaults 96 dpi)
@@ -14,7 +15,7 @@ def init_figure(size, dpi=96):
 
 
 def save_fig(name, extension="pdf", figure_path="figures", figure_prefix="figure"):
-    """Clean figure and save
+    """Clean figure and save.
 
     :param name: Figure name suffix
     :param extension: Export format (default pdf)
@@ -30,7 +31,7 @@ def save_fig(name, extension="pdf", figure_path="figures", figure_prefix="figure
 
 
 def make_panel_title(title):
-    """Add the panel title to the panel
+    """Add the panel title to the panel.
 
     :param title: Panel title
     :return: None
@@ -57,7 +58,7 @@ def set_properties(
     y_ticklabel=None,
     x_ticklabel=None,
 ):
-    """Set plot properties
+    """Set plot properties.
 
     :param title: Panel title
     :param x_label: x axis label defaults to ""

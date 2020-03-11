@@ -11,11 +11,12 @@ from ode_functions.diff_eq import (
     ode_2d,
     ode_3d,
     default_parameters,
-    current_voltage_curve,
     resize_initial_condition,
 )
+from ode_functions.experiment import current_voltage_curve
 from ode_functions.nullclines import nullcline_figure
 from plotting import init_figure, save_fig, set_properties
+from units import uA_PER_CM2, strip_dimension, ureg
 
 
 def run():
@@ -49,7 +50,7 @@ def figure4a(title, panel=0):
     :return: None
     """
     # Select appropriate i_app and hs for the panel used
-    i_app_list = [[0, 3.5], [0.16, 0.16, 0.16]][panel]
+    i_app_list = ([[0, 3.5], [0.16, 0.16, 0.16]] * uA_PER_CM2)[panel]
     hs_list = [[1, 1], [0.6, 0.2, 0.05]][panel]
 
     # Stability for each curve on each panel
@@ -58,7 +59,7 @@ def figure4a(title, panel=0):
     # Iterate over the different v nullclines from the different i_app and hs values
     for iy, (i_app, hs) in enumerate(zip(i_app_list, hs_list)):
         nullcline_figure(
-            v_range=[-90, 50],
+            v_range=[-90 * ureg.mV, 50 * ureg.mV],
             i_app=i_app,
             stability=stability[panel][iy],
             hs=hs,
@@ -107,7 +108,7 @@ def figure4b(title, panel=0):
         x_tick = [-6, 0, 6]
     else:
         figure4b2_continuation()
-        x_label = "I$_{app}$($\mu$A/cm$^2$)"
+        x_label = r"I$_{app}$($\mu$A/cm$^2$)"
         x_tick = [-0.1, 0, 0.2, 0.1]
 
     set_properties(
@@ -129,10 +130,12 @@ def figure4b1_continuation():
     :return: None
     """
     # Set parameters and convert to symbolic representation
-    parameters = default_parameters(i_app=0)
+    parameters = default_parameters(i_app=0 * uA_PER_CM2)
+    striped_parameters = {k: strip_dimension(v) for k, v in parameters.items()}
+
     v, h, i_app = symbols("v h i_app")
-    parameters["i_app"] = i_app
-    dydt = ode_2d([v, h], 0, parameters, exp=exp)
+    striped_parameters["i_app"] = i_app
+    dydt = ode_2d([v, h], 0, striped_parameters, exp=exp)
 
     DSargs_1 = PyDSTool.args(name="bifn_1")
     DSargs_1.pars = {"i_app": 0}
@@ -189,10 +192,12 @@ def figure4b2_continuation():
     :return: None
     """
     # Set parameters and convert to symbolic representation
-    parameters = default_parameters(i_app=-0.1)
+    parameters = default_parameters(i_app=-0.1 * uA_PER_CM2)
+    striped_parameters = {k: strip_dimension(v) for k, v in parameters.items()}
+
     v, h, h_s, i_app = symbols("v h h_s i_app")
-    parameters["i_app"] = i_app
-    dydt = ode_3d([v, h, h_s], 0, parameters, exp=exp)
+    striped_parameters["i_app"] = i_app
+    dydt = ode_3d([v, h, h_s], 0, striped_parameters, exp=exp)
 
     DSargs_2 = PyDSTool.args(name="bifn_2")
     DSargs_2.pars = {"i_app": 0}
@@ -255,12 +260,16 @@ def figure4c(title, panel=0):
     model = [ode_2d, ode_3d][panel]
 
     # Set IC
-    ic = [-100, 1]
+    ic = [-100 * ureg.mV, 1]
     ic = resize_initial_condition(ic, model, fill=1)
 
     # Compute IV curve
     current, voltage = current_voltage_curve(
-        model=model, clamp_range=[-100, 20], t_max=3000, ic=ic, follow=True
+        model=model,
+        clamp_range=[-100 * ureg.mV, 20 * ureg.mV],
+        t_max=3000 * ureg.ms,
+        ic=ic,
+        follow=True,
     )
 
     # plot IV curve
@@ -271,7 +280,7 @@ def figure4c(title, panel=0):
         set_properties(
             title,
             x_label="V (mV)",
-            y_label="I$_{stim}$($\mu$A/cm$^2$)",
+            y_label=r"I$_{stim}$($\mu$A/cm$^2$)",
             x_tick=[-80, -40],
             y_tick=[-5, 0, 5],
             x_limits=(-100, -20),
@@ -286,3 +295,7 @@ def figure4c(title, panel=0):
             x_limits=(-70, -50),
             y_limits=(-0.1, 0.2),
         )
+
+
+if __name__ == "__main__":
+    run()
