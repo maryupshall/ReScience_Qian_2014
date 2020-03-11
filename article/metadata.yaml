@@ -45,7 +45,7 @@ keywords: Python, depolarization block, dopaminergic neurons
 # You can get a DOI for your code from Zenodo,
 #   see https://guides.github.com/activities/citable-code/
 code:
-  - url: https://github.com/mupsh/ReScience_Levitan_2014
+  - url: https://github.com/mupsh/ReScience_Qian_2014
   - doi: 
 
 # Date URL and DOI (optional if no data)
@@ -55,8 +55,8 @@ data:
 
 # Information about the original article that has been replicated
 replication:
- - cite: Original article (Mathematical analysis of depolarization block mediated by slow inactivation of fast sodium channels in midbrain dopamine neurons., Levitan, E. S., Canavier, C. C., Tucker, K. R., Qian, K., \& Yu, N., Journal of Neurophysiology
- - bib:  Levitan2014
+ - cite: Original article (Mathematical analysis of depolarization block mediated by slow inactivation of fast sodium channels in midbrain dopamine neurons., Qian, K., Yu, N., Tucker, K. R., Levitan, E. S., and Canavier, C. C., Journal of Neurophysiology
+ - bib:  Qian2014
  - url:  https://www.physiology.org/doi/full/10.1152/jn.00578.2014
  - doi:  10.1152/jn.00578.2014
 
