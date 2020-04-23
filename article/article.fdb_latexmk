@@ -1,10 +1,10 @@
 # Fdb version 3
-["biber article"] 1587501512 "article.bcf" "article.bbl" "article" 1587501519
-  "article.bcf" 1587501519 88206 1573c48f9188daa598797a4e70364269 ""
+["biber article"] 1587665749 "article.bcf" "article.bbl" "article" 1587665757
+  "article.bcf" 1587665756 88206 1573c48f9188daa598797a4e70364269 ""
   "bibliography.bib" 1587499512 19760 d23825d172425bd845be4db4bfb26757 ""
   (generated)
   "article.bbl"
-["pdflatex"] 1587501517 "article.tex" "article.pdf" "article" 1587501519
+["pdflatex"] 1587665754 "article.tex" "article.pdf" "article" 1587665757
   "../figures/figure_1.pdf" 1587499512 25732 93af3c8b220609bbc5d9067e0ed67295 ""
   "../figures/figure_2.pdf" 1587499512 14695 c07cc66e506b9a55f157e823840b15f2 ""
   "../figures/figure_3.pdf" 1587499512 44389 d346913f05c12aae05e17b332efd6160 ""
@@ -199,19 +199,19 @@
   "/usr/share/texlive/texmf-dist/web2c/texmf.cnf" 1520210507 32485 c64754543d8ac501bea6e75e209ea521 ""
   "/usr/share/texmf/web2c/texmf.cnf" 1520210507 32485 c64754543d8ac501bea6e75e209ea521 ""
   "/var/lib/texmf/web2c/xetex/xelatex.fmt" 1586900725 2420962 f91ea5856cfdc17d435268f62c4d9f96 ""
-  "article.aux" 1587501519 13401 aeb409c1e56af7e5d1b6b0cbf78428c2 ""
-  "article.bbl" 1587501513 37522 78a081c1efea2d09fa629babb13e24d8 "biber article"
-  "article.out" 1587501519 429 e56343588a0118008a8afb46e92aae8b ""
-  "article.run.xml" 1587501519 2429 f314d0facb1450ab286ab4a440bf1597 ""
+  "article.aux" 1587665756 13401 aeb409c1e56af7e5d1b6b0cbf78428c2 ""
+  "article.bbl" 1587665750 37522 78a081c1efea2d09fa629babb13e24d8 "biber article"
+  "article.out" 1587665756 429 e56343588a0118008a8afb46e92aae8b ""
+  "article.run.xml" 1587665756 2429 f314d0facb1450ab286ab4a440bf1597 ""
   "article.tex" 1587499512 288 d8c4fabcd0f88ee2a6756d0ca5aa308a ""
-  "content.tex" 1587501500 32453 2502c317ce884862a56bc6d3065bccaf ""
+  "content.tex" 1587665611 32554 421c69e1b316e6ba11b5c747136e0340 ""
   "header.tex" 1587499512 3505 b6923f39b6f4a04ad9eb1a5f7e4328c7 ""
   "metadata.tex" 1587501458 3543 8e60608cca671d11e3780086ddbaaa29 ""
   "rescience.cls" 1587499512 10838 90a3fe44a6f70aa38fff2979e1894bc4 ""
   (generated)
   "article.pdf"
-  "article.run.xml"
+  "article.out"
   "article.bcf"
+  "article.run.xml"
   "article.log"
   "article.aux"
-  "article.out"
