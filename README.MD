@@ -11,7 +11,7 @@ make
 
 #### Code repository
 
-This provided code will reproduce all figures presented in the article. Figures are stored in the figures irectory
+This provided code will reproduce all figures presented in the article. Figures are stored in the figures directory
 
 Code has only been tested using python3.6 on linux and macOS
 
@@ -34,3 +34,6 @@ In order to reproduce all figures
 or 
 
 `python run.py`
+
+Note: when running figures you may see warnings about "test function going crazy" this is normal and does not affect 
+the results.
